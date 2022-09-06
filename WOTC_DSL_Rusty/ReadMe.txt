@@ -80,6 +80,10 @@ Many thanks to [b]Illogical[b] and [b]TedStar[/b] for testing the LWOTC compatib
 
 As always an appreciation to the XCOM2 and MEME Modding discords for support :)
 
+[h1]Other Links[/h1]
+Mod is now built using [url=https://github.com/X2CommunityCore/X2ModBuildCommon] X2 Mod Build Common [/url]
+Project is hosted on GitHub [url=https://github.com/RustyDios/WOTC_DSL_Rusty] GitHub Link [/url]
+
 ~ Enjoy [b]!![/b] and please [url=https://www.buymeacoffee.com/RustyDios] buy me a Cuppa Tea[/url]
 ================================================================================
 
