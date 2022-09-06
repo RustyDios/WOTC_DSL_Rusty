@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>9ee0b22d-94d1-4138-aee0-78fc4319c67d</Guid>
+    <Name>WOTC_DSL_Rusty</Name>
+    <Description>A clone of -bg-'s Detailed Soldier Lists with some edits and stuff for personal use</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>WOTC_DSL_Rusty</AssemblyName>
+    <RootNamespace>WOTC_DSL_Rusty</RootNamespace>
+    <ProjectGuid>{b8b55c7b-b6e9-4246-b7e9-16b0734ae0bc}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Localization\" />
+    <Folder Include="Content" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\LW_Tuple" />
+    <Folder Include="Src\LW_Tuple\Classes" />
+    <Folder Include="Src\WOTC_DSL_Rusty\" />
+    <Folder Include="Src\WOTC_DSL_Rusty\Classes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\XComLW_Overhaul.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComRPG.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\UILibrary_RPGO_DSL.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\UILibrary_RustyDSL.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="Config\XComEditor.ini" />
+    <Content Include="Config\XComEngine.ini" />
+    <Content Include="Config\XComGame.ini" />
+    <Content Include="Localization\WOTC_DSL_Rusty.int" />
+    <Content Include="Src\LW_Tuple\Classes\LWTuple.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\MoreDetailsManager.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\MoreDetailsNavigatorWrapper.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\UIPersonnel_SoldierListItemDetailed.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\UIProgressBar_DSL_Bond.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\UIStatListImproved_DSLKey.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\X2DownloadableContentInfo_WOTC_DSL_Rusty.uc" />
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\X2EventListener_StatusOfDSLRusty.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTC_DSL_Rusty\Classes\XGLocalisedData_DSL.uc">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
+</Project>
