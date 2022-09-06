@@ -356,7 +356,7 @@ static function EventListenerReturn OnRJSS_ExtraInfosOfficer(Object EventData, O
 	SlotIndex = Tuple.Data[0].i;
 
 	SlotIndexes.length = 0;
-	SlotIndexes = FindUnitSquadSlotIndexes();
+	SlotIndexes = FindUnitSquadSlotIndexes(false);
 
 	//OFFICER STATUS
 	if (SlotIndexes.Find(SlotIndex) != INDEX_NONE)
@@ -430,7 +430,7 @@ static function EventListenerReturn OnRJSS_ExtraInfosSparks(Object EventData, Ob
 //  INFORMATION GATHERING
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static final function array<int> FindUnitSquadSlotIndexes(optional bool bLookForSparks)
+static final function array<int> FindUnitSquadSlotIndexes(bool bLookForSparks)
 {
 	local XComGameState_HeadquartersXCom	XComHQ;
 	local XComGameStateHistory				History;
@@ -453,7 +453,7 @@ static final function array<int> FindUnitSquadSlotIndexes(optional bool bLookFor
 			{
 				iUnitIndexes.AddItem(i);
 			}
-			else if (IsUnitOfficer(UnitState) )
+			else if (IsUnitOfficer(UnitState) && !bLookForSparks)
 			{
 				iUnitIndexes.AddItem(i);
 			}
