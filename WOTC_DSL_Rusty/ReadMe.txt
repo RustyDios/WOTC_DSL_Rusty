@@ -61,7 +61,7 @@ These options are now in [url=https://steamcommunity.com/sharedfiles/filedetails
 [strike]As such will NOT work with[b]LWOTC[/b] or [b]RPGO[/b] as it has its own DSL with features not present here.[/strike]
 [b]Will not work with the Original DSL version.[/b]
 
-Works with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2781186785] Custom Hero Class Icons [/url]
+Works fine with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2781186785] Custom Hero Class Icons [/url]
 Works fine with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2567230730] Covert Infiltration [/url] ...
 Works fine with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2428993550] Amalgamation [/url]
 -- ensure the Amalgamation DSL MCO is commented out (Which it now is by default!)
