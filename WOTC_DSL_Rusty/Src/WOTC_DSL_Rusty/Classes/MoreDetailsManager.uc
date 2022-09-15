@@ -195,16 +195,34 @@ simulated function AddHelp()
 	local int i;
 
 	NavHelp = `HQPRES.m_kAvengerHUD.NavHelp;
-	
+
 	if(`SCREENSTACK.IsTopScreen(Screen) && NavHelp.m_arrButtonClickDelegates.Length > 0 && NavHelp.m_arrButtonClickDelegates.Find(OnToggleDetails) == INDEX_NONE)
 	{
-		//ADD BUTTON TO TOGGLE DETAILS OF SCREEN
-		NavHelp.AddCenterHelp(m_strToggleDetails, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_RT_R2, OnToggleDetails, false, "" /* ToolTipText */);
+		//CLEAR AND REDESIGN NAV HELP FOR NEW BUTTONS AND LEGEND PANEL
+		NavHelp.ClearButtonHelp();
+		NavHelp.bIsVerticalHelp = `ISCONTROLLERACTIVE;
 
-		//ADD BUTTON TO OPEN LEGEND PANEL
+		//ADD Standard trio
+		//add left back button, tie to OnCancel function, controller[B]
+		NavHelp.AddBackButton(class'UIPersonnel'.static.OnCancel);
+
+		// bsg-jrebar (4/12/17): Moved Select Nav Help - this is the select controller[A] helper
+		//<workshop> Adding single function to handle 'Select' NavHelp - JTA 2016/2/19
+		//would never be used in a game where a mouse is active, because 'select' simulates a mouse-click
+		NavHelp.AddSelectNavHelp(); 
+
+		// Don't allow jumping to the geoscape from the armory in the tutorial, controller[Y]
+		if (class'XComGameState_HeadquartersXCom'.static.GetObjectiveStatus('T0_M7_WelcomeToGeoscape') != eObjectiveState_InProgress )
+		{
+			NavHelp.AddGeoscapeButton();
+		}
+
+		//ADD BUTTON TO OPEN LEGEND PANEL [L3] .. CONTROLLER [D-PAD] FOR COLUMNS .. CONTROLLER[X] FOR TOGGLE SORT
 		if (`ISCONTROLLERACTIVE)
 		{
-			NavHelp.AddLeftHelp(m_strShowLegend, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_Y_TRIANGLE, OnToggleLegend, false, m_strShowLegend);
+			NavHelp.AddCenterHelp(class'UIPersonnel'.default.m_strToggleSort, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_X_SQUARE);
+			NavHelp.AddCenterHelp(class'UIPersonnel'.default.m_strChangeColumn, class'UIUtilities_Input'.const.ICON_DPAD_HORIZONTAL); //bsg-crobinson (5.15.17): Add change column icon
+			NavHelp.AddCenterHelp(m_strShowLegend, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LSCLICK_L3, OnToggleLegend, false, m_strShowLegend);
 		}
 		else
 		{
@@ -214,6 +232,8 @@ simulated function AddHelp()
 			NavHelp.SetButtonType("");
 		}
 
+		//ADD BUTTON TO TOGGLE DETAILS OF SCREEN .. CONTROLLER [R3]
+		NavHelp.AddCenterHelp(m_strToggleDetails, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_RSCLICK_R3, OnToggleDetails, false, m_strToggleDetails);
 	}
 
 	if (`SCREENSTACK.IsInStack(Screen.class))

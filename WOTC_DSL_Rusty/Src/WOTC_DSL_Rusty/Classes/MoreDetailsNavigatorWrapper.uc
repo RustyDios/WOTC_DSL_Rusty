@@ -21,12 +21,12 @@ simulated function bool OnUnrealCommand( int Cmd, int Arg )
 	{
 		switch( Cmd )
 		{
-			case class'UIUtilities_Input'.const.FXS_BUTTON_RTRIGGER:
+			case class'UIUtilities_Input'.const.FXS_BUTTON_R3:
 			case class'UIUtilities_Input'.const.FXS_KEY_TAB:
 				MMMgr.OnToggleDetails();
 				bHandled = true;
 				break;
-			case class'UIUtilities_Input'.const.FXS_BUTTON_Y:
+			case class'UIUtilities_Input'.const.FXS_BUTTON_L3:
 				MMMgr.OnToggleLegend();
 				bHandled = true;
 				break;
