@@ -204,7 +204,7 @@ simulated function AddHelp()
 
 		//ADD Standard trio
 		//add left back button, tie to OnCancel function, controller[B]
-		NavHelp.AddBackButton(class'UIPersonnel'.static.OnCancel);
+		NavHelp.AddBackButton(UIPersonnel(Screen).OnCancel);
 
 		// bsg-jrebar (4/12/17): Moved Select Nav Help - this is the select controller[A] helper
 		//<workshop> Adding single function to handle 'Select' NavHelp - JTA 2016/2/19
