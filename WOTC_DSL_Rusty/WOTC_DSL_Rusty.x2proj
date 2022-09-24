@@ -38,6 +38,7 @@
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
     <Content Include="Localization\WOTC_DSL_Rusty.int" />
+    <Content Include="Localization\WOTC_DSL_Rusty.rus" />
     <Content Include="Src\LW_Tuple\Classes\LWTuple.uc">
       <SubType>Content</SubType>
     </Content>
