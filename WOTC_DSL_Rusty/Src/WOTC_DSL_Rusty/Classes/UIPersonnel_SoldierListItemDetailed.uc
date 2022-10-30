@@ -41,8 +41,8 @@ var float BondIconX, BondIconY, BondBarWidth, BondBarHeight;
 //other values
 var bool bIsFocussed, bShouldHideBonds, bShouldShowBondProgressBar, bShouldShowDetailed, bRPGODetected ;
 var string strUnitName, strClassName, PCSImage, LoadoutImageP, LoadoutImageS;
-var string statsAP, statsHealth, statsMobility, statsDodge, statsDefense, statsHack, statsPsi, statsAim, statsWill, statsArmor, statsShields, statsMissions, statsXP, statsKills, statsPCS;
-var int statsAptitude, statsStatRPGO;
+var string statsRPGO, statsAP, statsHealth, statsMobility, statsDodge, statsDefense, statsHack, statsPsi, statsAim, statsWill, statsArmor, statsShields, statsMissions, statsXP, statsKills, statsPCS;
+var int intAptitude;
 var eUIState PCSState;
 
 ////////////////////////////////////////////////
@@ -197,8 +197,8 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 	LoadoutImageS = GetRPGOCatImage(X2WeaponTemplate(Unit.GetSecondaryWeapon().GetMyTemplate()).WeaponCat);
 	//LoadoutImageT = GetRPGOCatImage(X2WeaponTemplate(Unit.Get-ITEMSLOT-.GetMyTemplate()).WeaponCat); // can't confirm item in pistol slot will be weapon or how to get pistol slot
 
-	Unit.GetUnitValue('NaturalAptitude', RPGOValue);	statsAptitude = int(RPGOValue.fValue);
-	Unit.GetUnitValue('StatPoints', RPGOValue);			statsStatRPGO = int(RPGOValue.fValue);
+	Unit.GetUnitValue('NaturalAptitude', RPGOValue);	intAptitude = int(RPGOValue.fValue);
+	Unit.GetUnitValue('StatPoints', RPGOValue);			statsRPGO = string(int(RPGOValue.fValue));
 
 	//YES things are offset here so they appear correct in the log, stop changing it damn OCD !!
 	`LOG( "RUSTY DSL PANEL INITIED FOR UNIT \n"
@@ -221,8 +221,8 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 		 $"KILLS		[" @statsKills @"] \n"
 		 $"PCS			[" @statsPCS @"] \n"
 		 $"PCS ICON		[" @PCSImage @"] \n"
-		 $"APTITUDE		[" @statsAptitude @"] \n"
-		 $"RPGOSTAT		[" @statsStatRPGO @"]"
+		 $"APTITUDE		[" @intAptitude @"] \n"
+		 $"RPGOSTAT		[" @statsRPGO @"]"
 		 , default.bRustyEnableDSLLogging, 'DSLRusty_STATS');
 }
 
@@ -1049,7 +1049,7 @@ function AddRankColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 
 	/* <>SLOT 1 */ 
 	if (Icon_Slot1 == none) { AddIconSlot(Icon_Slot1, "1", APColours[int(Unit.ComInt)], APImagePath[int(Unit.ComInt)] 	); } //ComInt
-	if (Icon_SlotR == none) { AddIconSlot(Icon_SlotR, "R", NAColours[statsAptitude], 	NAImagePath[statsAptitude] 		); } //RPGO AP
+	if (Icon_SlotR == none) { AddIconSlot(Icon_SlotR, "R", NAColours[intAptitude], 		NAImagePath[intAptitude] 		); } //RPGO AP
 
 	if (Text_Slot1 == none)
 	{
@@ -1302,7 +1302,7 @@ function ShowDetailed(bool IsDetailed)
 	{
 		//Rank Column
 		bRPGODetected ? Icon_SlotR.Show() : Icon_Slot1.Show(); 
-		Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? string(statsStatRPGO) : statsAP, eUIState_Normal));		Text_Slot1.Show();
+		Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? statsRPGO : statsAP, eUIState_Normal));					Text_Slot1.Show();
 
 		//Name Column
 		Icon_Slot2.LoadImage(StatIconPath[12]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsArmor,	eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
@@ -1423,7 +1423,7 @@ simulated function UpdateItemsForFocus(bool Focussed)
 	//set text displays to unit stats gathered above
     if (bShouldShowDetailed)
 	{
-		Text_Slot1.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? string(statsStatRPGO) : statsAP, ( bReverse ? -1 : isUIState )));	//natapt or comint .. black to cyan
+		Text_Slot1.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? statsRPGO : statsAP, ( bReverse ? -1 : isUIState )));	//natapt or comint .. black to cyan
 
 		Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsArmor,		( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot3.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsShields,		( bReverse ? -1 : isUIState )));	//black to cyan
