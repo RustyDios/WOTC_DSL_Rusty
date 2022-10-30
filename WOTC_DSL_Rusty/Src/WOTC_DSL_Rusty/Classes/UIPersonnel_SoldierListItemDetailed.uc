@@ -207,22 +207,22 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 		 $"SECONDARY	[" @LoadoutImageS @"] \n"
 		 $"AP			[" @statsAP @"] \n"
 		 $"HEALTH		[" @statsHealth @"] \n"
-		 $"MOBILITY	[" @statsMobility @"] \n"
+		 $"MOBILITY		[" @statsMobility @"] \n"
 		 $"DEFENSE		[" @statsDefense @"] \n"
 		 $"DODGE		[" @statsDodge @"] \n"
-		 $"HACK		[" @statsHack @"] \n"
+		 $"HACK			[" @statsHack @"] \n"
 		 $"PSI			[" @statsPsi @"] \n"
 		 $"AIM			[" @statsAim @"] \n"
-		 $"WILL		[" @statsWill @"] \n"
+		 $"WILL			[" @statsWill @"] \n"
 		 $"ARMOUR		[" @statsArmor @"] \n"
 		 $"SHIELDS		[" @statsShields @"] \n"
-		 $"MISSIONS	[" @statsMissions @"] \n"
+		 $"MISSIONS		[" @statsMissions @"] \n"
 		 $"XPSHARE		[" @statsXP @"] \n"
 		 $"KILLS		[" @statsKills @"] \n"
 		 $"PCS			[" @statsPCS @"] \n"
-		 $"PCS ICON	[" @PCSImage @"] \n"
-		 $"APTITUDE	[" @statsAptitude @"] \n"
-		 $"RPGOSTAT	[" @statsStatRPGO @"]"
+		 $"PCS ICON		[" @PCSImage @"] \n"
+		 $"APTITUDE		[" @statsAptitude @"] \n"
+		 $"RPGOSTAT		[" @statsStatRPGO @"]"
 		 , default.bRustyEnableDSLLogging, 'DSLRusty_STATS');
 }
 
@@ -1302,7 +1302,7 @@ function ShowDetailed(bool IsDetailed)
 	{
 		//Rank Column
 		bRPGODetected ? Icon_SlotR.Show() : Icon_Slot1.Show(); 
-		Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? string(statsAptitude) : statsAP, eUIState_Normal));		Text_Slot1.Show();
+		Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? string(statsStatRPGO) : statsAP, eUIState_Normal));		Text_Slot1.Show();
 
 		//Name Column
 		Icon_Slot2.LoadImage(StatIconPath[12]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsArmor,	eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
@@ -1423,7 +1423,7 @@ simulated function UpdateItemsForFocus(bool Focussed)
 	//set text displays to unit stats gathered above
     if (bShouldShowDetailed)
 	{
-		Text_Slot1.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? string(statsAptitude) : statsAP, ( bReverse ? -1 : isUIState )));	//natapt or comint .. black to cyan
+		Text_Slot1.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? string(statsStatRPGO) : statsAP, ( bReverse ? -1 : isUIState )));	//natapt or comint .. black to cyan
 
 		Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsArmor,		( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot3.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsShields,		( bReverse ? -1 : isUIState )));	//black to cyan
