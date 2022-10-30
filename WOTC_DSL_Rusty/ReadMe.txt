@@ -78,6 +78,8 @@ Huge thanks AGAIN to [b]Iridar[/b] for 'Officer Component' code for LWotC!!
 Many thanks to [b]MrCloista[b] and [b]TeslaRage[/b] for helping BetaTest this version.
 Many thanks to [b]Illogical[b] and [b]TedStar[/b] for testing the LWOTC compatibility.
 
+Translations; Russian by [b]Aks[/b], Spanish by [b]TARDIS[/b]
+
 As always an appreciation to the XCOM2 and MEME Modding discords for support :)
 
 [h1]Other Links[/h1]
