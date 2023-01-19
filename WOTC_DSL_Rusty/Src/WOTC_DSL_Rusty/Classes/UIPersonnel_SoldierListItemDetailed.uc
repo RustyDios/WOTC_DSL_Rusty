@@ -997,6 +997,7 @@ function AddIconSlot(out UIIcon Icon_Slot, string Slot_Number, string BGColour, 
 {
 	Icon_Slot = Spawn(class'UIIcon', self);
 	Icon_Slot.bAnimateOnInit = false;
+	Icon_Slot.bIsNavigable = false;
 	Icon_Slot.bDisableSelectionBrackets = true;
 
 	Icon_Slot.InitIcon(name("Icon_Slot" $ Slot_Number $ "_ListItem_RD"), , false, true);
@@ -1015,6 +1016,7 @@ function AddIconSlotFlag(out UIIcon Icon_Flag, string Icon_Slot, string ImagePat
 {
 	Icon_Flag = Spawn(class'UIIcon', self);
 	Icon_Flag.bAnimateOnInit = false;
+	Icon_Flag.bIsNavigable = false;
 	Icon_Flag.bDisableSelectionBrackets = true;
 	
 	Icon_Flag.InitIcon(name("Icon_Flag" $ Icon_Slot $"_ListItem_RD"), , false, true, 18);
@@ -1125,6 +1127,7 @@ function AddStatSlot(out UIImage Icon_Slot, out UIText Text_Slot, string Slot_Nu
 {
 	Icon_Slot = Spawn(class'UIImage', self);
 	Icon_Slot.bAnimateOnInit = false;
+	Icon_Slot.bIsNavigable = false;
 	Icon_Slot.InitImage(name("Icon_Slot" $ Slot_Number $ "_ListItem_RD"), ImagePath );
 	Icon_Slot.SetScale(IconScale);
 	Icon_Slot.SetPosition(IconXPos, IconYPos); //"UILibrary_RustyDSL.Image_Health"
@@ -1149,6 +1152,7 @@ function AddPerkPanel(out UIPanel PerkPanel, name initName, int LengthSize)
 function InitPerkIcon(UIIcon PerkIcon, name InitName, string ImagePath, int initXpos)
 {
 	PerkIcon.bDisableSelectionBrackets = true;
+	PerkIcon.bIsNavigable = false;
 	PerkIcon.InitIcon(InitName, ImagePath, false, false);
 	PerkIcon.SetScale(IconScale);
 	PerkIcon.SetPosition(initXpos, 0);
