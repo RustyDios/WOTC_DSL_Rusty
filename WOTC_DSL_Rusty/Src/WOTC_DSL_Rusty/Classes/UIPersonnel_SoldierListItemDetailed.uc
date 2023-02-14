@@ -181,7 +181,8 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 	if (bWillAddGear) { Will += Unit.GetUIStatFromInventory(eStat_Will); }
 	statsWill 		= string(Will) $ "/" $ string(int(Unit.GetMaxStat(eStat_Will)));
 
-	Armor 			= int(Unit.GetCurrentStat(eStat_ArmorMitigation));
+	//Armor			= int(Unit.GetCurrentStat(eStat_ArmorMitigation));
+	Armor	 		= int(Unit.GetArmorMitigationForUnitFlag());
 	if (bArmorAddPerk) { Armor += Unit.GetUIStatFromAbilities(eStat_ArmorMitigation); }
 	if (bArmorAddGear) { Armor += Unit.GetUIStatFromInventory(eStat_ArmorMitigation); }
 	statsArmor 		= string(Armor);
