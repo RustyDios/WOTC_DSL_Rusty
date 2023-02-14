@@ -15,6 +15,7 @@ var config array<RPGOWeaponCatImage> RPGOWeaponCatImages; //Struct in MoreDetail
 
 var config bool bHealthAddPerk, bMobAddPerk, bDefenseAddPerk, bDodgeAddPerk, bHackAddPerk, bPsiAddPerk, bAimAddPerk, bWillAddPerk, bArmorAddPerk, bShieldsAddPerk;
 var config bool bHealthAddGear, bMobAddGear, bDefenseAddGear, bDodgeAddGear, bHackAddGear, bPsiAddGear, bAimAddGear, bWillAddGear, bArmorAddGear, bShieldsAddGear;
+var config bool bSHOW_MAXHEALTH;
 
 //rank column
 //Officer, SPARK, AP(RPGO), ComInt
@@ -43,7 +44,7 @@ var bool bIsFocussed, bShouldHideBonds, bShouldShowBondProgressBar, bShouldShowD
 var string strUnitName, strClassName, PCSImage, LoadoutImageP, LoadoutImageS;
 var string statsRPGO, statsAP, statsHealth, statsMobility, statsDodge, statsDefense, statsHack, statsPsi, statsAim, statsWill, statsArmor, statsShields, statsMissions, statsXP, statsKills, statsPCS;
 var int intAptitude;
-var eUIState PCSState;
+var eUIState PCSState, HPState;
 
 ////////////////////////////////////////////////
 //	ON INIT
@@ -123,15 +124,27 @@ simulated function AddAdditionalItems(XComGameState_Unit Unit, UIPersonnel_Soldi
 simulated function SetUnitStats(XComGameState_Unit Unit)
 {
 	local UnitValue RPGOValue;
-	local int Health, Mobility, Defense, Dodge, Hack, Psi, Aim, Will, Armor, Shields;
+	local int HealthCur, HealthMax, Mobility, Defense, Dodge, Hack, Psi, Aim, Will, Armor, Shields;
 
 	// Get Unit base stats and any stat modifications from abilities
     statsAP 		= string(Unit.AbilityPoints);
     
-	Health 			= int(Unit.GetCurrentStat(eStat_HP));
-	if (bHealthAddPerk) { Health += Unit.GetUIStatFromAbilities(eStat_HP); }
-	if (bHealthAddGear) { Health += Unit.GetUIStatFromInventory(eStat_HP); }
-   	statsHealth 	= string(Health);
+	HealthCur 			= int(Unit.GetCurrentStat(eStat_HP));
+	if (bHealthAddPerk) { HealthCur += Unit.GetUIStatFromAbilities(eStat_HP); }
+	if (bHealthAddGear) { HealthCur += Unit.GetUIStatFromInventory(eStat_HP); }
+
+	HealthMax 			= int(Unit.GetMaxStat(eStat_HP));
+	if (bHealthAddPerk) { HealthMax += Unit.GetUIStatFromAbilities(eStat_HP); }
+	if (bHealthAddGear) { HealthMax += Unit.GetUIStatFromInventory(eStat_HP); }
+
+   	statsHealth 	= string(HealthCur);
+
+	if (default.bSHOW_MAXHEALTH)
+	{
+		statsHealth $= "/" $ HealthMax;
+	}
+
+	HPState = HealthCur < HealthMax ? eUIState_Warning : eUIState_Good;
 
 	Mobility 		= int(Unit.GetCurrentStat(eStat_Mobility));
 	if (bMobAddPerk) { Mobility += Unit.GetUIStatFromAbilities(eStat_Mobility); }
@@ -1169,12 +1182,12 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	local int i, AWCRank;
 
 	/* <>SLOT 2 */ IconXPos = 170;						if(Icon_Slot2 == none || Text_Slot2 == none) { AddStatSlot(Icon_Slot2, Text_Slot2, "2", StatIconPath[2]); } // Health	/ Armour
-	/* <>SLOT 3 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot3 == none || Text_Slot3 == none) { AddStatSlot(Icon_Slot3, Text_Slot3, "3", StatIconPath[1]); } // Mobility	/ Shields
+	/* <>SLOT 3 */ IconXPos += IconXDeltaSmallValue +6;	if(Icon_Slot3 == none || Text_Slot3 == none) { AddStatSlot(Icon_Slot3, Text_Slot3, "3", StatIconPath[1]); } // Mobility	/ Shields
 	/* <>SLOT 4 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot4 == none || Text_Slot4 == none) { AddStatSlot(Icon_Slot4, Text_Slot4, "4", StatIconPath[2]); } // Dodge	/ Missions
 	/* <>SLOT 5 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot5 == none || Text_Slot5 == none) { AddStatSlot(Icon_Slot5, Text_Slot5, "5", StatIconPath[6]); } // Defense	/ XP Progress
 	/* <>SLOT 6 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot6 == none || Text_Slot6 == none) { AddStatSlot(Icon_Slot6, Text_Slot6, "6", StatIconPath[3]); } // Hacking
 
-	/* <>SLOT 7 */ IconXPos += IconXDeltaSmallValue + 8 ;
+	/* <>SLOT 7 */ IconXPos += IconXDeltaSmallValue +8;
 	if (ShouldShowPsi(Unit)) { 	if(Icon_Slot7 == none || Text_Slot7 == none) { AddStatSlot(Icon_Slot7, Text_Slot7, "7", StatIconPath[4]); } } // Psi Offense
 
     //RESET/HARDCODE X POS FOR WEAPONS ICONS
@@ -1199,7 +1212,7 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	}
 
     //RESET/HARDCODE X POS FOR TRAIT PERKS PANEL
-	IconXPos = 450;
+	IconXPos = 456;
 
     // Bad Traits Panel spawn
 	if (BadTraitPanel == none)
@@ -1258,8 +1271,8 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 //ADD icons to Class field ... Aim, will, ... (Kills, PCS)
 function AddSpecColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem ListItem)
 {
-	/* <>SLOT 8 */ IconXPos = 600;			if(Icon_Slot8 == none || Text_Slot8 == none) { AddStatSlot(Icon_Slot8, Text_Slot8, "8", StatIconPath[5]); } // Aim	/ Kills
-	/* <>SLOT 9 */ IconXPos += IconXDelta;	if(Icon_Slot9 == none || Text_Slot9 == none) { AddStatSlot(Icon_Slot9, Text_Slot9, "9", StatIconPath[7]); } // Will	/ PCS
+	/* <>SLOT 8 */ IconXPos = 592;				if(Icon_Slot8 == none || Text_Slot8 == none) { AddStatSlot(Icon_Slot8, Text_Slot8, "8", StatIconPath[5]); } // Aim	/ Kills
+	/* <>SLOT 9 */ IconXPos += IconXDelta +8;	if(Icon_Slot9 == none || Text_Slot9 == none) { AddStatSlot(Icon_Slot9, Text_Slot9, "9", StatIconPath[7]); } // Will	/ PCS
 }
 
 ///////////////////////////////////////////////
@@ -1272,16 +1285,8 @@ function AddSpecColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 //  UPDATE AND SWITCH DISPLAYED LISTS
 ///////////////////////////////////////////////////////////////
 
-function ShowDetailed(bool IsDetailed)
+function HideAllStats()
 {
-	local XComGameState_Unit Unit;
-	
-	bShouldShowDetailed = IsDetailed;
-
-	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
-
-    //HIDE EVERYTHING AND WORK OUT FROM HERE AFTERWARDS, MAKES IT LOOK LIKE THEY ARE REFRESHING/SWAPPING
-
     Text_Slot1.Hide();		Icon_Slot1.Hide();	Icon_SlotR.Hide(); 
 
 	Text_Slot2.Hide();  	Icon_Slot2.Hide();
@@ -1298,7 +1303,19 @@ function ShowDetailed(bool IsDetailed)
 
 	BondIcon.Hide();		BondProgressBar.Hide();
     BadTraitPanel.Hide();	BonusAbilityPanel.Hide();
+}
 
+function ShowDetailed(bool IsDetailed)
+{
+	local XComGameState_Unit Unit;
+	
+	bShouldShowDetailed = IsDetailed;
+
+    //HIDE EVERYTHING AND WORK OUT FROM HERE AFTERWARDS, MAKES IT LOOK LIKE THEY ARE REFRESHING/SWAPPING
+	HideAllStats();
+
+	//Show RPGO Style weapon icons if enabled
+	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
 	if (ShouldDisplayWeaponIcons(Unit) || bRPGODetected) { Icon_SlotP.Show();	Icon_SlotS.Show(); }
 
     //Show what is required
@@ -1332,7 +1349,15 @@ function ShowDetailed(bool IsDetailed)
 		Icon_Slot1.Show();						Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAP, 		eUIState_Normal));	Text_Slot1.Show();		
 
 		//Name Column
-		Icon_Slot2.LoadImage(StatIconPath[0]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHealth, 	eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
+		if (default.bSHOW_MAXHEALTH)
+		{
+			Icon_Slot2.LoadImage(StatIconPath[5]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAim, 		eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
+		}
+		else
+		{
+			Icon_Slot2.LoadImage(StatIconPath[0]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHealth, 	eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
+		}
+
 		Icon_Slot3.LoadImage(StatIconPath[1]);	Text_Slot3.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsMobility, eUIState_Normal));	Text_Slot3.Show();	Icon_Slot3.Show(); 
 		Icon_Slot4.LoadImage(StatIconPath[2]);	Text_Slot4.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsDodge, 	eUIState_Normal));	Text_Slot4.Show();	Icon_Slot4.Show(); 
 		Icon_Slot5.LoadImage(StatIconPath[6]);	Text_Slot5.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsDefense, 	eUIState_Normal));	Text_Slot5.Show();	Icon_Slot5.Show();	
@@ -1344,7 +1369,15 @@ function ShowDetailed(bool IsDetailed)
 		}
 
 		//Class Column
-		Icon_Slot8.LoadImage(StatIconPath[5]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAim, 		eUIState_Normal));	Text_Slot8.Show();	Icon_Slot8.Show(); 
+		if (default.bSHOW_MAXHEALTH)
+		{
+			Icon_Slot8.LoadImage(StatIconPath[0]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHealth, 	eUIState_Normal));	Text_Slot8.Show();	Icon_Slot8.Show(); 
+		}
+		else 
+		{
+			Icon_Slot8.LoadImage(StatIconPath[5]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAim, 		eUIState_Normal));	Text_Slot8.Show();	Icon_Slot8.Show(); 
+		}
+
 		Icon_Slot9.LoadImage(StatIconPath[7]);	Text_Slot9.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsWill, 	eUIState_Normal));	Text_Slot9.Show();	Icon_Slot9.Show(); 
 		
 		if (PCSImage != "")	{ Icon_Slot9.SetScale(IconScale); }	//YES WE HAVE TO RESCALE IF WE HAD A PCS IMAGE
@@ -1412,7 +1445,7 @@ simulated function UpdateItemsForFocus(bool Focussed)
 	local XComGameState_Unit Unit;
 	local UIIcon PerkIcon;
 	local bool bReverse;
-	local int isUIState, PCSColour, PsiColour, WillState;
+	local int isUIState, PCSColour, PsiColour, WillState, HPColours;
 
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
 
@@ -1420,6 +1453,7 @@ simulated function UpdateItemsForFocus(bool Focussed)
 	PsiColour = (IsDisabled ? eUIState_Disabled : eUIState_Psyonic);
 	PCSColour = (IsDisabled ? eUIState_Disabled : int(PCSState));
 	WillState = (IsDisabled ? eUIState_Disabled : int(Unit.GetMentalStateUIState()));
+	HPColours = (IsDisabled ? eUIState_Disabled : int(HPState));
 
 	bIsFocussed = Focussed;
 	bReverse = bIsFocussed && !IsDisabled;
@@ -1443,14 +1477,29 @@ simulated function UpdateItemsForFocus(bool Focussed)
 	{
 		Text_Slot1.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAP,			( bReverse ? -1 : isUIState )));	//black to cyan
 
-		Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHealth,		( bReverse ? -1 : isUIState )));	//black to cyan
+		if (default.bSHOW_MAXHEALTH)
+		{
+			Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAim,			( bReverse ? -1 : isUIState )));	//black to cyan
+		}
+		else 
+		{
+			Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHealth,		( bReverse ? -1 : isUIState )));	//black to cyan
+		}
 		Text_Slot3.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsMobility,	( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot4.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsDodge,		( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot5.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsDefense,		( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot6.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHack,		( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot7.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsPsi,			( bReverse ? -1 : PsiColour )));	//black to purple
 
-		Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAim,			( bReverse ? -1 : isUIState )));	//black to cyan
+		if (default.bSHOW_MAXHEALTH)
+		{
+			Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHealth,		( bReverse ? -1 : HPColours )));	//black to traffic
+		}
+		else
+		{
+			Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAim,			( bReverse ? -1 : isUIState )));	//black to cyan
+		}
+
 		Text_Slot9.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsWill,		( bReverse ? -1 : WillState )));	//black to traffic
 
 		/* set traits */	foreach BadTraitIcon(PerkIcon) 		{ PerkIcon.SetForegroundColor( bReverse ? "000000" : "9ACBCB");}	//black to cyan
