@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 05/08/22	01:10
+//	File CREATED 08/12/20	02:00	LAST UPDATED 14/02/23	23:15
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
