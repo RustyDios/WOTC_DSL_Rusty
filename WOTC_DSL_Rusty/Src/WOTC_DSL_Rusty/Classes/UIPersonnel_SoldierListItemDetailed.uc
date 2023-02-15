@@ -1182,10 +1182,10 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	local X2AbilityTemplate AbilityTemplate;
 	local int i, AWCRank;
 
-	/* <>SLOT 2 */ IconXPos = 170;						if(Icon_Slot2 == none || Text_Slot2 == none) { AddStatSlot(Icon_Slot2, Text_Slot2, "2", StatIconPath[2]); } // Health	/ Armour
-	/* <>SLOT 3 */ IconXPos += IconXDeltaSmallValue +6;	if(Icon_Slot3 == none || Text_Slot3 == none) { AddStatSlot(Icon_Slot3, Text_Slot3, "3", StatIconPath[1]); } // Mobility	/ Shields
-	/* <>SLOT 4 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot4 == none || Text_Slot4 == none) { AddStatSlot(Icon_Slot4, Text_Slot4, "4", StatIconPath[2]); } // Dodge	/ Missions
-	/* <>SLOT 5 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot5 == none || Text_Slot5 == none) { AddStatSlot(Icon_Slot5, Text_Slot5, "5", StatIconPath[6]); } // Defense	/ XP Progress
+	/* <>SLOT 2 */ IconXPos = 170;						if(Icon_Slot2 == none || Text_Slot2 == none) { AddStatSlot(Icon_Slot2, Text_Slot2, "2", StatIconPath[2]); } // Health/Aim	/ Armour
+	/* <>SLOT 3 */ IconXPos += IconXDeltaSmallValue +6;	if(Icon_Slot3 == none || Text_Slot3 == none) { AddStatSlot(Icon_Slot3, Text_Slot3, "3", StatIconPath[1]); } // Mobility		/ Shields
+	/* <>SLOT 4 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot4 == none || Text_Slot4 == none) { AddStatSlot(Icon_Slot4, Text_Slot4, "4", StatIconPath[2]); } // Dodge		/ Missions
+	/* <>SLOT 5 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot5 == none || Text_Slot5 == none) { AddStatSlot(Icon_Slot5, Text_Slot5, "5", StatIconPath[6]); } // Defense		/ XP Progress
 	/* <>SLOT 6 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot6 == none || Text_Slot6 == none) { AddStatSlot(Icon_Slot6, Text_Slot6, "6", StatIconPath[3]); } // Hacking
 
 	/* <>SLOT 7 */ IconXPos += IconXDeltaSmallValue +8;
@@ -1272,8 +1272,8 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 //ADD icons to Class field ... Aim, will, ... (Kills, PCS)
 function AddSpecColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem ListItem)
 {
-	/* <>SLOT 8 */ IconXPos = 592;				if(Icon_Slot8 == none || Text_Slot8 == none) { AddStatSlot(Icon_Slot8, Text_Slot8, "8", StatIconPath[5]); } // Aim	/ Kills
-	/* <>SLOT 9 */ IconXPos += IconXDelta +8;	if(Icon_Slot9 == none || Text_Slot9 == none) { AddStatSlot(Icon_Slot9, Text_Slot9, "9", StatIconPath[7]); } // Will	/ PCS
+	/* <>SLOT 8 */ IconXPos = 598;				if(Icon_Slot8 == none || Text_Slot8 == none) { AddStatSlot(Icon_Slot8, Text_Slot8, "8", StatIconPath[5]); } // Aim/Health	/ Kills
+	/* <>SLOT 9 */ IconXPos += IconXDelta +6;	if(Icon_Slot9 == none || Text_Slot9 == none) { AddStatSlot(Icon_Slot9, Text_Slot9, "9", StatIconPath[7]); } // Will			/ PCS
 }
 
 ///////////////////////////////////////////////
