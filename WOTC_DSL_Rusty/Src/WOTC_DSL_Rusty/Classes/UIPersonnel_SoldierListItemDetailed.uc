@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 14/02/23	23:15
+//	File CREATED 08/12/20	02:00	LAST UPDATED 25/03/23	02:50
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
@@ -40,11 +40,19 @@ var UIProgressBar_DSL_Bond BondProgressBar;
 var float BondIconX, BondIconY, BondBarWidth, BondBarHeight;
 
 //other values
-var bool bIsFocussed, bShouldHideBonds, bShouldShowBondProgressBar, bShouldShowDetailed, bRPGODetected ;
-var string strUnitName, strClassName, PCSImage, LoadoutImageP, LoadoutImageS;
+var bool bIsFocussed, bShouldHideBonds, bShouldShowBondProgressBar, bShouldShowDetailed, bRPGODetected;
+var string strUnitName, strClassName, PCSImage, LoadoutImageP, LoadoutImageS, DisabledToolTipText;
 var string statsRPGO, statsAP, statsHealth, statsMobility, statsDodge, statsDefense, statsHack, statsPsi, statsAim, statsWill, statsArmor, statsShields, statsMissions, statsXP, statsKills, statsPCS;
 var int intAptitude;
 var eUIState PCSState, HPState;
+
+//from parents values
+//var UIPanel BG;
+//var StateObjectReference UnitRef;
+//var UIImage PsiMarkup;
+//var UIBondIcon BondIcon;
+//var bool m_bIsDisabled;
+//var localized string BondmateTooltip; 
 
 ////////////////////////////////////////////////
 //	ON INIT
@@ -58,7 +66,7 @@ simulated function InitListItem(StateObjectReference initUnitRef)
 
 	class'MoreDetailsManager'.static.GetOrSpawnParentDM(self).IsMoreDetails = false;
 	bRPGODetected = class'X2DownloadableContentInfo_WOTC_DSL_Rusty'.static.IsRPGOLoaded();
-
+	
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(initUnitRef.ObjectID));
 	
 	SetUnitStats(Unit);
@@ -788,7 +796,7 @@ simulated function UpdateData()
 	local X2SoldierClassTemplate SoldierClass;
 
 	local XComGameState_ResistanceFaction FactionState;
-	local StackedUIIconData StackedClassIcon; // Variable for issue #1134
+	local StackedUIIconData StackedClassIcon, EmptyIconInfo; // Variable for issue #1134 and #295
 
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
 
@@ -918,6 +926,11 @@ simulated function UpdateData()
 	{
 		AS_SetFactionIcon(FactionState.GetFactionIcon());
 	}
+	else
+	{
+		// Preserve backwards compatibility in case AS_SetFactionIcon() is overridden via an MCO.
+		AS_SetFactionIcon(EmptyIconInfo);
+	}
 
 	///////////////////////////////////////////////
     //	UPDATE OUR NEW STAT ICONS & INFO TEXTS
@@ -991,9 +1004,9 @@ function UpdateBondIconAndBar(XComGameState_Unit Unit, out int BondLevel)
 	}
 }
 
-	///////////////////////////////////////////////
-	//	update for visibility/colours/etc
-	///////////////////////////////////////////////
+///////////////////////////////////////////////
+//	update for visibility/colours/etc
+///////////////////////////////////////////////
 
 function UpdateAdditionalItems(UIPersonnel_SoldierListItem ListItem)
 {
@@ -1403,6 +1416,8 @@ simulated function UIButton SetDisabled(bool disabled, optional string TooltipTe
 {
 	super.SetDisabled(disabled, TooltipText);
 
+	DisabledToolTipText = TooltipText;
+
 	UpdateDisabled();
 	UpdateItemsForFocus(bIsFocussed);
 
@@ -1591,12 +1606,15 @@ protected function CreateAttentionIcon()
 simulated function RefreshTooltipText()
 {
 	local XComGameState_Unit Unit;
+
 	local SoldierBond BondData;
 	local StateObjectReference BondmateRef;
 	local XComGameState_Unit Bondmate;
-	local string textTooltip, traitTooltip;
+
 	local X2EventListenerTemplateManager EventTemplateManager;
 	local X2TraitTemplate TraitTemplate;
+
+	local string textTooltip, traitTooltip;
 	local int i;
 
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
@@ -1605,44 +1623,49 @@ simulated function RefreshTooltipText()
 	textTooltip = "";
 	traitTooltip = "";
 
+	//Set any disabled reason first, possible input from disabled reason, KDM
+	textTooltip = DisabledTooltipText;
+
 	//add bond details if any
 	if( Unit.HasSoldierBond(BondmateRef, BondData) )
 	{
 		Bondmate = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(BondmateRef.ObjectID));
-		textTooltip = Repl(BondmateTooltip, "%SOLDIERNAME", Caps(Bondmate.GetName(eNameType_RankFull)));
+
+		//add linebreak if we had disabled details
+		if (textTooltip != "") { textTooltip $= "\n\n"; }
+
+		textTooltip $= Repl(BondmateTooltip, "%SOLDIERNAME", Caps(Bondmate.GetName(eNameType_RankFull)));
 	}
 	else if( Unit.ShowBondAvailableIcon(BondmateRef, BondData) )
 	{
-		textTooltip = class'XComHQPresentationLayer'.default.m_strBannerBondAvailable;
+		//add linebreak if we had disabled details
+		if (textTooltip != "") { textTooltip $= "\n\n"; }
+
+		textTooltip $= class'XComHQPresentationLayer'.default.m_strBannerBondAvailable;
 	}
 
-	//add traits if any
+	//add trait tips if any
 	if (Unit.AcquiredTraits.length > 0)
 	{
 		EventTemplateManager = class'X2EventListenerTemplateManager'.static.GetEventListenerTemplateManager();
 
-		//add linebreak if we had bond details
-		if (textTooltip != "")
-		{
-			textTooltip $= "\n\n";
-		}
+		//add linebreak if we had previous details
+		if (textTooltip != "") { textTooltip $= "\n\n"; }
 
-		//construct trait string
+		//construct traits multi-string
 		for (i = 0; i < Unit.AcquiredTraits.Length; i++)
 		{
 			TraitTemplate = X2TraitTemplate(EventTemplateManager.FindEventListenerTemplate(Unit.AcquiredTraits[i]));
 			if (TraitTemplate != none)
 			{
-				if (traitTooltip != "")
-				{
-					traitTooltip $= "\n";
-				}
+				//start new line for new trait
+				if (traitTooltip != "") { traitTooltip $= "\n"; }
 
 				traitTooltip $= TraitTemplate.TraitFriendlyName @ "-" @ TraitTemplate.TraitDescription;
 			}
 		}
 
-		//merge bond and triat tooltips
+		//merge previous and trait tooltips
 		textTooltip $= traitTooltip;
 	}
 
@@ -1704,4 +1727,6 @@ defaultproperties
 	DisabledAlpha = 0.5f;
 
 	bAnimateOnInit = false;
+
+	DisabledToolTipText = "";
 }
