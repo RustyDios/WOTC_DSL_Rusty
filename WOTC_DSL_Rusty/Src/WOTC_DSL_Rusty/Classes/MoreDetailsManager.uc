@@ -349,22 +349,41 @@ simulated function array<UISummary_DSL_Legend> GetLegendStats()
 	//I could have looped through all the StatIconPath array here and just added as they came up
 	//BUT I wanted more direct control, with sections and 'headers'
 
+	//HEADER - NAME COLUMN 
 	StatsEntry.Label = m_strSection1;		StatsEntry.LabelState = eUIState_Header;	StatsEntry.IconPath = "";				Stats.AddItem(StatsEntry);	
 
 	StatsEntry.LabelState = eUIState_Normal;
-	StatsEntry.Label = class'XLocalizedData'.default.HealthLabel;						StatsEntry.IconPath = StatIconPath[0];	Stats.AddItem(StatsEntry);	
+	if (class'UIPersonnel_SoldierListItemDetailed'.default.bSHOW_MAXHEALTH)
+	{
+		StatsEntry.Label = class'XLocalizedData'.default.AimLabel;							StatsEntry.IconPath = StatIconPath[5];	Stats.AddItem(StatsEntry);
+	}
+	else
+	{
+		StatsEntry.Label = class'XLocalizedData'.default.HealthLabel;						StatsEntry.IconPath = StatIconPath[0];	Stats.AddItem(StatsEntry);	
+	}
+
 	StatsEntry.Label = class'UISoldierHeader'.default.m_strMobilityLabel;				StatsEntry.IconPath = StatIconPath[1];	Stats.AddItem(StatsEntry);	
 	StatsEntry.Label = class'XLocalizedData'.default.DodgeLabel;						StatsEntry.IconPath = StatIconPath[2];	Stats.AddItem(StatsEntry);	
 	StatsEntry.Label = class'XLocalizedData'.default.DefenseLabel;						StatsEntry.IconPath = StatIconPath[6];	Stats.AddItem(StatsEntry);	
 	StatsEntry.Label = class'XLocalizedData'.default.TechLabel;							StatsEntry.IconPath = StatIconPath[3];	Stats.AddItem(StatsEntry);	
 	StatsEntry.Label = class'XLocalizedData'.default.PsiOffenseLabel;					StatsEntry.IconPath = StatIconPath[4];	Stats.AddItem(StatsEntry);	
-	
+
+	//HEADER - 	CLASS COLUMN
 	StatsEntry.Label = m_strSection2;		StatsEntry.LabelState = eUIState_Header;	StatsEntry.IconPath = "";				Stats.AddItem(StatsEntry);	
 
 	StatsEntry.LabelState = eUIState_Normal;
-	StatsEntry.Label = class'XLocalizedData'.default.AimLabel;							StatsEntry.IconPath = StatIconPath[5];	Stats.AddItem(StatsEntry);
+
+	if (class'UIPersonnel_SoldierListItemDetailed'.default.bSHOW_MAXHEALTH)
+	{
+		StatsEntry.Label = class'XLocalizedData'.default.HealthLabel;						StatsEntry.IconPath = StatIconPath[0];	Stats.AddItem(StatsEntry);	
+	}
+	else
+	{
+		StatsEntry.Label = class'XLocalizedData'.default.AimLabel;							StatsEntry.IconPath = StatIconPath[5];	Stats.AddItem(StatsEntry);
+	}
 	StatsEntry.Label = class'XLocalizedData'.default.WillLabel;							StatsEntry.IconPath = StatIconPath[7];	Stats.AddItem(StatsEntry);	
 
+	//HEADER - MORE DETAILS NAME
 	StatsEntry.Label = m_strSection3;		StatsEntry.LabelState = eUIState_Header;	StatsEntry.IconPath = "";				Stats.AddItem(StatsEntry);
 
 	StatsEntry.LabelState = eUIState_Normal;
@@ -373,12 +392,14 @@ simulated function array<UISummary_DSL_Legend> GetLegendStats()
 	StatsEntry.Label = Repl(class'UISoldierHeader'.default.m_strMissionsLabel, ":","");	StatsEntry.IconPath = StatIconPath[9];	Stats.AddItem(StatsEntry);	
 	StatsEntry.Label = class'XLocalizedData'.default.XpSharesLabel;						StatsEntry.IconPath = StatIconPath[11];	Stats.AddItem(StatsEntry);
 	
+	//HEADER - MORE DETAILS CLASS
 	StatsEntry.Label = m_strSection4;		StatsEntry.LabelState = eUIState_Header;	StatsEntry.IconPath = "";				Stats.AddItem(StatsEntry);	
 
 	StatsEntry.LabelState = eUIState_Normal;
 	StatsEntry.Label = Repl(class'UISoldierHeader'.default.m_strKillsLabel, ":","");	StatsEntry.IconPath = StatIconPath[10];	Stats.AddItem(StatsEntry);	
 	StatsEntry.Label = m_strPCSLabel;													StatsEntry.IconPath = StatIconPath[16];	Stats.AddItem(StatsEntry);	
 
+	//HEADER - OTHER
 	StatsEntry.Label = m_strSection5;		StatsEntry.LabelState = eUIState_Header;	StatsEntry.IconPath = "";				Stats.AddItem(StatsEntry);
 
 	StatsEntry.LabelState = eUIState_Normal;

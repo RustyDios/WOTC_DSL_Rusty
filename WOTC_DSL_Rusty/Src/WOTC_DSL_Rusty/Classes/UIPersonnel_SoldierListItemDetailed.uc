@@ -15,7 +15,7 @@ var config array<RPGOWeaponCatImage> RPGOWeaponCatImages; //Struct in MoreDetail
 
 var config bool bHealthAddPerk, bMobAddPerk, bDefenseAddPerk, bDodgeAddPerk, bHackAddPerk, bPsiAddPerk, bAimAddPerk, bWillAddPerk, bArmorAddPerk, bShieldsAddPerk;
 var config bool bHealthAddGear, bMobAddGear, bDefenseAddGear, bDodgeAddGear, bHackAddGear, bPsiAddGear, bAimAddGear, bWillAddGear, bArmorAddGear, bShieldsAddGear;
-var config bool bSHOW_MAXHEALTH;
+var config bool bSHOW_MAXHEALTH, bSTICKYLIST, bLOOPLIST;
 
 //rank column
 //Officer, SPARK, AP(RPGO), ComInt
@@ -61,6 +61,7 @@ var eUIState PCSState, HPState;
 simulated function InitListItem(StateObjectReference initUnitRef)
 {
 	local XComGameState_Unit Unit;
+	local UIList ContainerList;
 
 	super.InitListItem(initUnitRef);
 
@@ -73,6 +74,13 @@ simulated function InitListItem(StateObjectReference initUnitRef)
 
 	AddAdditionalItems(Unit, self);
 	UpdateAdditionalItems(self);
+
+	// HAX: get parent list to manipulate
+	ContainerList = UIList(GetParent(class'UIList'));
+
+	ContainerList.bStickyHighlight = default.bSTICKYLIST;
+	ContainerList.bLoopSelection = default.bLOOPLIST;
+
 }
 
 ////////////////////////////////////////////////
@@ -1634,14 +1642,14 @@ simulated function RefreshTooltipText()
 		//add linebreak if we had disabled details
 		if (textTooltip != "") { textTooltip $= "\n\n"; }
 
-		textTooltip $= Repl(BondmateTooltip, "%SOLDIERNAME", Caps(Bondmate.GetName(eNameType_RankFull)));
+		textTooltip $= Repl(BondmateTooltip, "%SOLDIERNAME", ColorText(Caps(Bondmate.GetName(eNameType_RankFull)), "3CEDD4") );
 	}
 	else if( Unit.ShowBondAvailableIcon(BondmateRef, BondData) )
 	{
 		//add linebreak if we had disabled details
 		if (textTooltip != "") { textTooltip $= "\n\n"; }
 
-		textTooltip $= class'XComHQPresentationLayer'.default.m_strBannerBondAvailable;
+		textTooltip $= ColorText(class'XComHQPresentationLayer'.default.m_strBannerBondAvailable, "5CD16C");
 	}
 
 	//add trait tips if any
@@ -1661,7 +1669,16 @@ simulated function RefreshTooltipText()
 				//start new line for new trait
 				if (traitTooltip != "") { traitTooltip $= "\n"; }
 
-				traitTooltip $= TraitTemplate.TraitFriendlyName @ "-" @ TraitTemplate.TraitDescription;
+				if (TraitTemplate.bPositiveTrait)
+				{
+					traitTooltip $= ColorText(TraitTemplate.TraitFriendlyName, "53B45E" );
+				}
+				else 
+				{
+					traitTooltip $= ColorText(TraitTemplate.TraitFriendlyName, "BF1E2E");
+				}
+
+				traitTooltip $= "\n -" @ TraitTemplate.TraitDescription;
 			}
 		}
 
@@ -1680,6 +1697,11 @@ simulated function RefreshTooltipText()
 	{
 		SetTooltipText("");
 	}
+}
+
+static function string ColorText( string strValue, string HexColor )
+{
+	return "<font color='#"$HexColor$"'>"$strValue$"</font>";
 }
 
 ////////////////////////////////////////
@@ -1725,8 +1747,8 @@ defaultproperties
 	BondBarHeight = 38.0f;
 
 	DisabledAlpha = 0.5f;
+	DisabledToolTipText = "";
 
 	bAnimateOnInit = false;
 
-	DisabledToolTipText = "";
 }
