@@ -1780,6 +1780,9 @@ simulated function OnMouseEvent(int Cmd, array<string> Args)
 			case class'UIUtilities_Input'.const.FXS_L_MOUSE_DRAG_OUT:
 				OnLoseFocus();
 				break;
+			default:
+				Super(UIPanel).OnMouseEvent(Cmd, Args);
+				break;
 		}
 
 		return;
