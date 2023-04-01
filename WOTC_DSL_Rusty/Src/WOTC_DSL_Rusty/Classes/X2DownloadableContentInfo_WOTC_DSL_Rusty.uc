@@ -2,7 +2,7 @@
 //  FILE:   XComDownloadableContentInfo_WOTC_DSL_Rusty.uc                                    
 //
 //	CREATED BY RUSTYDIOS	08/12/20	02:00
-//	LAST EDITED				16/10/21	10:00
+//	LAST EDITED				31/03/23	12:00
 //
 //---------------------------------------------------------------------------------------
 
@@ -117,3 +117,75 @@ static function OnPreCreateTemplates()
 //static function bool AbilityTagExpandHandler(string InString, out string OutString){return false;}
 //static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay){}
 //static function bool DisplayQueuedDynamicPopup(DynamicPropertySet PropertySet){}
+
+exec function RustyFix_DSL_GiveOverloadToUnit()
+{
+	local UIArmory							Armory;
+	local StateObjectReference				UnitRef;
+	local XComGameState_Unit				UnitState;
+	local XComGameState NewGameState;
+	local XComGameStateHistory History;
+	local array<name>TraitTemplateNames;
+	local name TraitTemplateName;
+	local X2AbilityTemplateManager AbMan;
+	local X2AbilityTemplate AbilityTemplate;
+	local SoldierClassAbilityType AbilityType;
+	local ClassAgnosticAbility Ability;
+
+	History = `XCOMHISTORY;
+
+	Armory = UIArmory(`SCREENSTACK.GetFirstInstanceOf(class'UIArmory'));
+	if (Armory == none)
+	{
+		return;
+	}
+
+	UnitRef = Armory.GetUnitRef();
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
+	if (UnitState == none)
+	{
+		return;
+	}
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Adding overload to unit");
+	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', UnitState.ObjectID));
+
+	TraitTemplateNames.AddItem('FearOfSectoids');
+	TraitTemplateNames.AddItem('FearOfPanic');
+	TraitTemplateNames.AddItem('FearOfMissedShots');
+	TraitTemplateNames.AddItem('FearOfVertigo');
+	TraitTemplateNames.AddItem('FearOfVipers');
+	TraitTemplateNames.AddItem('FearOfArchons');
+	TraitTemplateNames.AddItem('FearOfStunLancers');
+
+	foreach TraitTemplateNames(TraitTemplateName)
+	{
+		UnitState.AcquireTrait(NewGameState, TraitTemplateName, true);
+	}
+
+	AbMan = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	TraitTemplateNames.length = 0;
+
+	TraitTemplateNames.AddItem('Fuse');
+	TraitTemplateNames.AddItem('Soulfire');
+	TraitTemplateNames.AddItem('SoulSteal');
+	TraitTemplateNames.AddItem('PaleHorse');
+	TraitTemplateNames.AddItem('TargetDefinition');
+	TraitTemplateNames.AddItem('Insanity');
+	TraitTemplateNames.AddItem('Inspire');
+
+	foreach TraitTemplateNames(TraitTemplateName)
+	{
+		AbilityTemplate = AbMan.FindAbilityTemplate(TraitTemplateName);
+		AbilityType.AbilityName = AbilityTemplate.DataName;
+
+		Ability.AbilityType = AbilityType;
+		Ability.bUnlocked = true;
+		Ability.iRank = 1;
+		UnitState.bSeenAWCAbilityPopup = true;
+		UnitState.AWCAbilities.AddItem(Ability);
+	}
+
+	`XCOMGAME.GameRuleset.SubmitGameState(NewGameState);
+	return;
+}

@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 25/03/23	02:50
+//	File CREATED 08/12/20	02:00	LAST UPDATED 31/03/23	21:30
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
@@ -10,12 +10,12 @@ class UIPersonnel_SoldierListItemDetailed extends UIPersonnel_SoldierListItem co
 
 var config int NUM_HOURS_TO_DAYS;
 var config bool ROOKIE_SHOW_PSI, ALWAYS_SHOW_PSI, ALWAYS_SHOW_WEAPONICONS, bFULL_NUM_DISPLAY, bRustyEnableDSLLogging, bRustyExtraIconPositionTest,  bShouldAnimateBond;
+var config bool bSHOW_MAXHEALTH, bSTICKYLIST;
 var config array<string> StatIconPath, APColours, APImagePath, NAColours, NAImagePath;
 var config array<RPGOWeaponCatImage> RPGOWeaponCatImages; //Struct in MoreDetailsManager
 
 var config bool bHealthAddPerk, bMobAddPerk, bDefenseAddPerk, bDodgeAddPerk, bHackAddPerk, bPsiAddPerk, bAimAddPerk, bWillAddPerk, bArmorAddPerk, bShieldsAddPerk;
 var config bool bHealthAddGear, bMobAddGear, bDefenseAddGear, bDodgeAddGear, bHackAddGear, bPsiAddGear, bAimAddGear, bWillAddGear, bArmorAddGear, bShieldsAddGear;
-var config bool bSHOW_MAXHEALTH, bSTICKYLIST, bLOOPLIST;
 
 //rank column
 //Officer, SPARK, AP(RPGO), ComInt
@@ -29,11 +29,13 @@ var UIImage	Icon_Slot2, Icon_Slot3,	Icon_Slot4,	Icon_Slot5,	Icon_Slot6, Icon_Slo
 var UIText  Text_Slot2,	Text_Slot3,	Text_Slot4,	Text_Slot5, Text_Slot6, Text_Slot7, Text_Slot8, Text_Slot9;
 
 var float IconXPos, IconYPos, IconXDelta, IconScale, IconToTextOffsetX, IconToTextOffsetY, IconXDeltaSmallValue, DisabledAlpha;
-var float TraitIconX, AbilityIconX;
+var float TraitIconX, AbilityIconX, TraitIconY, AbilityIconY, PerkPanelSize;
 
 //perk displays
 var UIPanel BadTraitPanel, BonusAbilityPanel;
-var array<UIIcon> BadTraitIcon, BonusAbilityIcon;
+var array<UIIcon> BadTraitIcons, BonusAbilityIcons;
+var array<X2AbilityTemplate> AWCTemplates;
+var array<X2TraitTemplate> TraitTemplates;
 
 //var UIProgressBar BondProgressBar;
 var UIProgressBar_DSL_Bond BondProgressBar;
@@ -79,8 +81,6 @@ simulated function InitListItem(StateObjectReference initUnitRef)
 	ContainerList = UIList(GetParent(class'UIList'));
 
 	ContainerList.bStickyHighlight = default.bSTICKYLIST;
-	ContainerList.bLoopSelection = default.bLOOPLIST;
-
 }
 
 ////////////////////////////////////////////////
@@ -704,6 +704,7 @@ simulated function bool ShouldShowPsi(XComGameState_Unit Unit)
 {
 	local LWTuple Tuple;	//OLDTUPLE SO OLD
 
+	//we have no reason not to show any more so we can just override for this DSL redux
     if (default.ALWAYS_SHOW_PSI)
     {
 		return true;
@@ -774,7 +775,7 @@ simulated protected function bool ShouldDisplayMentalStatus (XComGameState_Unit 
 	return Unit.IsActive();
 }
 
-//copied? from CHL Start issue #651
+//copied from CHL Start issue #651
 simulated protected function bool TriggerShouldDisplayMentalStatus (XComGameState_Unit Unit)
 {
 	local XComLWTuple Tuple;
@@ -1180,17 +1181,17 @@ function AddPerkPanel(out UIPanel PerkPanel, name initName, int LengthSize)
 	PerkPanel.bIsNavigable = false;
 	PerkPanel.InitPanel(initName);
 	PerkPanel.SetPosition(IconXPos, IconYPos+1);
-	PerkPanel.SetSize(IconScale * LengthSize, IconScale);
-	PerkPanel.AnimateScroll(IconScale, IconScale);
+	PerkPanel.SetSize(IconToTextOffsetX * LengthSize, IconToTextOffsetX);
+	//PerkPanel.AnimateScroll(IconToTextOffsetX, IconToTextOffsetX);
 }
 
-function InitPerkIcon(UIIcon PerkIcon, name InitName, string ImagePath, int initXpos)
+function InitPerkIcon(UIIcon PerkIcon, name InitName, string ImagePath, int initXpos, int initYpos)
 {
 	PerkIcon.bDisableSelectionBrackets = true;
 	PerkIcon.bIsNavigable = false;
 	PerkIcon.InitIcon(InitName, ImagePath, false, false);
 	PerkIcon.SetScale(IconScale);
-	PerkIcon.SetPosition(initXpos, 0);
+	PerkIcon.SetPosition(initXpos, initYpos);
 	PerkIcon.SetForegroundColor("9ACBCB");
 }
 
@@ -1198,10 +1199,12 @@ function InitPerkIcon(UIIcon PerkIcon, name InitName, string ImagePath, int init
 function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem ListItem)
 {
 	local X2EventListenerTemplateManager 	EventTemplateManager;
+	local X2TraitTemplate 					TraitTemplate;
+
 	local X2AbilityTemplateManager			AbilityTemplateManager;
-	local X2TraitTemplate TraitTemplate;
-	local X2AbilityTemplate AbilityTemplate;
-	local int i, AWCRank;
+	local X2AbilityTemplate 				AbilityTemplate;
+
+	local int i, idx, AWCRank, AWCRow;
 
 	/* <>SLOT 2 */ IconXPos = 170;						if(Icon_Slot2 == none || Text_Slot2 == none) { AddStatSlot(Icon_Slot2, Text_Slot2, "2", StatIconPath[2]); } // Health/Aim	/ Armour
 	/* <>SLOT 3 */ IconXPos += IconXDeltaSmallValue +6;	if(Icon_Slot3 == none || Text_Slot3 == none) { AddStatSlot(Icon_Slot3, Text_Slot3, "3", StatIconPath[1]); } // Mobility		/ Shields
@@ -1234,12 +1237,13 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	}
 
     //RESET/HARDCODE X POS FOR TRAIT PERKS PANEL
-	IconXPos = 456;
+	IconXPos = 454;
 
     // Bad Traits Panel spawn
 	if (BadTraitPanel == none)
 	{
-		AddPerkPanel (BadTraitPanel, 'BadTraitIcon_List_RD', 3);
+		PerkPanelSize = 3;
+		AddPerkPanel (BadTraitPanel, 'BadTraitIcons_List_RD', PerkPanelSize);
 
 		EventTemplateManager = class'X2EventListenerTemplateManager'.static.GetEventListenerTemplateManager();
 
@@ -1249,9 +1253,15 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 			TraitTemplate = X2TraitTemplate(EventTemplateManager.FindEventListenerTemplate(Unit.AcquiredTraits[i]));
 			if (TraitTemplate != none)
 			{
-				BadTraitIcon.InsertItem(i, Spawn(class'UIIcon', BadTraitPanel));
-				InitPerkIcon(BadTraitIcon[i], name("TraitIcon_ListItem_RD_" $ i), TraitTemplate.IconImage, TraitIconX);
+				TraitTemplates.AddItem(TraitTemplate);
+
+				BadTraitIcons.AddItem(Spawn(class'UIIcon', BadTraitPanel)); 
+				idx = BadTraitIcons.length -1;
+				InitPerkIcon(BadTraitIcons[idx], name("TraitIcon_ListItem_RD_" $ idx), TraitTemplate.IconImage, TraitIconX, TraitIconY);
 				TraitIconX += IconToTextOffsetX;
+
+				//Hide Icons past the limit
+				if (TraitIconX > IconToTextOffsetX*PerkPanelSize) { BadTraitIcons[idx].Hide(); }
 			}
 		}
 	}
@@ -1262,24 +1272,67 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	//2ND PAGE detailed AWC abilities spawn
 	if (BonusAbilityPanel == none)
 	{
-		AddPerkPanel (BonusAbilityPanel, 'BonusAbilityIcon_List_RD', 5);
+		PerkPanelSize = 5;
+		AddPerkPanel (BonusAbilityPanel, 'BonusAbilityIcons_List_RD', PerkPanelSize);
 
-		//detailed AWC fill
-		if (Unit.GetSoldierClassTemplateName() != '' && Unit.bRolledForAWCAbility)
+		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+		AWCRank = Unit.GetRank();
+
+		//Grab any ACTUAL AWC Perks the unit might have unlocked
+		for (i = 0 ; i < Unit.AWCAbilities.Length ; i++)
 		{
-			AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-			AWCRank = Unit.GetSoldierClassTemplate().AbilityTreeTitles.Length - 1;
-
-			for (i = 1; i < Unit.GetSoldierClassTemplate().GetMaxConfiguredRank(); i++)
+			AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AWCAbilities[i].AbilityType.AbilityName);
+			if (AbilityTemplate != none && Unit.AWCAbilities[i].bUnlocked && AWCRank >= Unit.AWCAbilities[i].iRank)
 			{
-				if (Unit.AbilityTree[i].Abilities.Length > AWCRank && Unit.HasSoldierAbility(Unit.AbilityTree[i].Abilities[AWCRank].AbilityName))
+				//Add if not already there
+				if (AWCTemplates.Find(AbilityTemplate) == INDEX_NONE)
 				{
-					AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AbilityTree[i].Abilities[AWCRank].AbilityName);
-					BonusAbilityIcon.AddItem(Spawn(class'UIIcon', BonusAbilityPanel));
-					InitPerkIcon(BonusAbilityIcon[BonusAbilityIcon.Length - 1], name("AbilityIcon_ListItem_RD_" $ i), AbilityTemplate.IconImage, AbilityIconX);
-					AbilityIconX += IconToTextOffsetX;
+					AWCTemplates.AddItem(AbilityTemplate);
 				}
 			}
+		}
+
+		//detailed AWC fill from last row of class tree, note does not count for hero units or units that are not allowed AWC
+		if (class'X2SoldierClass_DefaultChampionClasses'.default.ChampionClasses.Find(Unit.GetSoldierClassTemplateName()) != INDEX_NONE)
+		{
+			//Do nothing, it was a hero unit
+		}
+		else if (Unit.GetSoldierClassTemplate().bAllowAWCAbilities)
+		{
+			// we ASSUME that the last row is the XCOM/AWC random deck row
+			// we also ASSUME that the localisation is set up correctly to have the correct number of titles!
+			// <> TODO : Make this better!
+			AWCRow = Max(0, Unit.GetSoldierClassTemplate().AbilityTreeTitles.Length - 1);
+			AWCRank = Unit.GetSoldierClassTemplate().GetMaxConfiguredRank();
+
+			//Check each rank for any perks in the last row that the soldier has purchased, don't check SQD
+			for (i = 1; i <= AWCRank; i++)
+			{
+				if (Unit.AbilityTree[i].Abilities.Length > AWCRow )
+				{
+					AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AbilityTree[i].Abilities[AWCRow].AbilityName);
+					if (AbilityTemplate != none && Unit.HasSoldierAbility(Unit.AbilityTree[i].Abilities[AWCRow].AbilityName))
+					{
+						//Add if not existing
+						if (AWCTemplates.Find(AbilityTemplate) == INDEX_NONE)
+						{
+							AWCTemplates.AddItem(AbilityTemplate);
+						}
+					}
+				}
+			}
+		}
+
+		//Now we have gathered the AWC perks
+		foreach AWCTemplates(AbilityTemplate)
+		{
+			BonusAbilityIcons.AddItem(Spawn(class'UIIcon', BonusAbilityPanel));
+			idx = BonusAbilityIcons.Length - 1;
+			InitPerkIcon(BonusAbilityIcons[idx], name("AbilityIcon_ListItem_RD_" $ idx), AbilityTemplate.IconImage, AbilityIconX, AbilityIconY);
+			AbilityIconX += IconToTextOffsetX;
+
+			//Hide Icons past the limit
+			if (AbilityIconX > IconToTextOffsetX*PerkPanelSize) { BonusAbilityIcons[idx].Hide(); }
 		}
 	}
 
@@ -1411,9 +1464,11 @@ function ShowDetailed(bool IsDetailed)
 	//SET ABOVE IF THE UNIT HAS A BOND/PROGRESS
 	if (!bShouldHideBonds) { BondIcon.Show();	if (bShouldShowBondProgressBar) { BondProgressBar.Show();	} }
 
-	 //THIS ENSURES WE GET THE RIGHT COLOURED TEXT ETC WHEN WE SWITCH
+	//THIS ENSURES WE GET THE RIGHT COLOURED TEXT ETC WHEN WE SWITCH
 	UpdateDisabled();
 	UpdateItemsForFocus(bIsFocussed);
+
+	RefreshTooltipText(); //we have switched awc/traits and bond shown so lets update the tooltip too
 }
 
 //////////////////////////////////////////////////
@@ -1422,9 +1477,9 @@ function ShowDetailed(bool IsDetailed)
 
 simulated function UIButton SetDisabled(bool disabled, optional string TooltipText)
 {
-	super.SetDisabled(disabled, TooltipText);
-
 	DisabledToolTipText = TooltipText;
+
+	super.SetDisabled(disabled, TooltipText);
 
 	UpdateDisabled();
 	UpdateItemsForFocus(bIsFocussed);
@@ -1458,8 +1513,8 @@ simulated function UpdateDisabled()
 	if(Icon_SlotP != none) { Icon_SlotP.SetAlpha(UpdateAlpha);	}
 	if(Icon_SlotS != none) { Icon_SlotS.SetAlpha(UpdateAlpha);	}
 
-	/* set traits */	foreach BadTraitIcon(PerkIcon) 		{ PerkIcon.SetAlpha(UpdateAlpha); }
-	/* set AWC perks */	foreach BonusAbilityIcon(PerkIcon) 	{ PerkIcon.SetAlpha(UpdateAlpha); }
+	/* set traits */	foreach BadTraitIcons(PerkIcon) 		{ PerkIcon.SetAlpha(UpdateAlpha); }
+	/* set AWC perks */	foreach BonusAbilityIcons(PerkIcon) 	{ PerkIcon.SetAlpha(UpdateAlpha); }
 }
 
 //adjust text for highlight
@@ -1495,7 +1550,7 @@ simulated function UpdateItemsForFocus(bool Focussed)
 		Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsKills,		( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot9.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsPCS,			( bReverse ? -1 : PCSColour )));	//black to good/bad
 
-		/* set AWC perks */	foreach BonusAbilityIcon(PerkIcon) 	{ PerkIcon.SetForegroundColor( bReverse ? "000000" : "9ACBCB");}	//black to cyan
+		/* set AWC perks */	foreach BonusAbilityIcons(PerkIcon)	{ PerkIcon.SetForegroundColor( bReverse ? "000000" : "9ACBCB");}	//black to cyan
 	}
 	else
 	{
@@ -1503,11 +1558,11 @@ simulated function UpdateItemsForFocus(bool Focussed)
 
 		if (default.bSHOW_MAXHEALTH)
 		{
-			Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAim,			( bReverse ? -1 : isUIState )));	//black to cyan
+			Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAim,		( bReverse ? -1 : isUIState )));	//black to cyan
 		}
 		else 
 		{
-			Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHealth,		( bReverse ? -1 : isUIState )));	//black to cyan
+			Text_Slot2.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHealth,	( bReverse ? -1 : isUIState )));	//black to cyan
 		}
 		Text_Slot3.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsMobility,	( bReverse ? -1 : isUIState )));	//black to cyan
 		Text_Slot4.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsDodge,		( bReverse ? -1 : isUIState )));	//black to cyan
@@ -1517,16 +1572,16 @@ simulated function UpdateItemsForFocus(bool Focussed)
 
 		if (default.bSHOW_MAXHEALTH)
 		{
-			Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHealth,		( bReverse ? -1 : HPColours )));	//black to traffic
+			Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsHealth,	( bReverse ? -1 : HPColours )));	//black to traffic
 		}
 		else
 		{
-			Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAim,			( bReverse ? -1 : isUIState )));	//black to cyan
+			Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsAim,		( bReverse ? -1 : isUIState )));	//black to cyan
 		}
 
 		Text_Slot9.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsWill,		( bReverse ? -1 : WillState )));	//black to traffic
 
-		/* set traits */	foreach BadTraitIcon(PerkIcon) 		{ PerkIcon.SetForegroundColor( bReverse ? "000000" : "9ACBCB");}	//black to cyan
+		/* set traits */	foreach BadTraitIcons(PerkIcon)		{ PerkIcon.SetForegroundColor( bReverse ? "000000" : "9ACBCB");}	//black to cyan
 	}
 
 	//set bond progress bar
@@ -1613,17 +1668,14 @@ protected function CreateAttentionIcon()
 //refresh and update tooltips on hover over abilities and traits
 simulated function RefreshTooltipText()
 {
-	local XComGameState_Unit Unit;
+	local XComGameState_Unit 				Unit, Bondmate;
+	local StateObjectReference 				BondmateRef;
+	local SoldierBond 						BondData;
 
-	local SoldierBond BondData;
-	local StateObjectReference BondmateRef;
-	local XComGameState_Unit Bondmate;
-
-	local X2EventListenerTemplateManager EventTemplateManager;
-	local X2TraitTemplate TraitTemplate;
+	local X2TraitTemplate 					TraitTemplate;
+	local X2AbilityTemplate 				AbilityTemplate;
 
 	local string textTooltip, traitTooltip;
-	local int i;
 
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
 
@@ -1652,34 +1704,31 @@ simulated function RefreshTooltipText()
 		textTooltip $= ColorText(class'XComHQPresentationLayer'.default.m_strBannerBondAvailable, "5CD16C");
 	}
 
-	//add trait tips if any
-	if (Unit.AcquiredTraits.length > 0)
+	//set text displays to page
+    if (bShouldShowDetailed)
 	{
-		EventTemplateManager = class'X2EventListenerTemplateManager'.static.GetEventListenerTemplateManager();
-
 		//add linebreak if we had previous details
 		if (textTooltip != "") { textTooltip $= "\n\n"; }
 
-		//construct traits multi-string
-		for (i = 0; i < Unit.AcquiredTraits.Length; i++)
+		//add perk names if any (we gathered these earlier)
+		foreach AWCTemplates(AbilityTemplate)
 		{
-			TraitTemplate = X2TraitTemplate(EventTemplateManager.FindEventListenerTemplate(Unit.AcquiredTraits[i]));
-			if (TraitTemplate != none)
-			{
-				//start new line for new trait
-				if (traitTooltip != "") { traitTooltip $= "\n"; }
+			textTooltip $= AbilityTemplate.LocFriendlyName $"\n";
+		}
+	}
+	else if (Unit.AcquiredTraits.length > 0)
+	{
+		//add linebreak if we had previous details
+		if (textTooltip != "") { textTooltip $= "\n\n"; }
 
-				if (TraitTemplate.bPositiveTrait)
-				{
-					traitTooltip $= ColorText(TraitTemplate.TraitFriendlyName, "53B45E" );
-				}
-				else 
-				{
-					traitTooltip $= ColorText(TraitTemplate.TraitFriendlyName, "BF1E2E");
-				}
+		//add trait tips if any, construct traits multi-string (we gathered these earlier)
+		foreach TraitTemplates(TraitTemplate)
+		{
+			//start new line for new trait
+			if (traitTooltip != "") { traitTooltip $= "\n"; }
 
-				traitTooltip $= "\n -" @ TraitTemplate.TraitDescription;
-			}
+			traitTooltip $= ColorText(TraitTemplate.TraitFriendlyName, TraitTemplate.bPositiveTrait ? "53B45E" : "BF1E2E");
+			traitTooltip $= "\n -" @ TraitTemplate.TraitDescription;
 		}
 
 		//merge previous and trait tooltips
@@ -1704,12 +1753,38 @@ static function string ColorText( string strValue, string HexColor )
 	return "<font color='#"$HexColor$"'>"$strValue$"</font>";
 }
 
-////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 //  'SCREEN' MANIPULATION
-////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
 simulated function OnMouseEvent(int Cmd, array<string> Args)
 {
+	// HAX: get parent list to manipulate
+	local UIList ContainerList;
+	ContainerList = UIList(GetParent(class'UIList'));
+
+	//make sure we correctly switch colours during sticky mode
+	if (ContainerList.bStickyHighlight && ContainerList.GetSelectedItem() == self)
+	{
+		// Ensure we're not processing any delayed mouse events if the user has requested to ignore mouse input.
+		if(ContainerList.HasHitTestDisabled()) return;
+
+		switch(cmd)
+		{
+			case class'UIUtilities_Input'.const.FXS_L_MOUSE_IN:
+			case class'UIUtilities_Input'.const.FXS_L_MOUSE_OVER:
+			case class'UIUtilities_Input'.const.FXS_L_MOUSE_DRAG_OVER:
+				OnReceiveFocus();
+				break;
+			case class'UIUtilities_Input'.const.FXS_L_MOUSE_OUT:
+			case class'UIUtilities_Input'.const.FXS_L_MOUSE_DRAG_OUT:
+				OnLoseFocus();
+				break;
+		}
+
+		return;
+	}
+
 	Super(UIPanel).OnMouseEvent(Cmd, Args);
 }
 
@@ -1727,9 +1802,9 @@ simulated function OnLoseFocus()
 	FocusBondmateEntry(false);
 }
 
-////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 //  DEFAULT PROPERTIES
-////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
 defaultproperties
 {
