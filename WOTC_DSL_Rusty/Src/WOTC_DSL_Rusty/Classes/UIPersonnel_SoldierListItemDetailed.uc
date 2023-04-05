@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 31/03/23	21:30
+//	File CREATED 08/12/20	02:00	LAST UPDATED 05/04/23	03:00
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
@@ -9,8 +9,8 @@
 class UIPersonnel_SoldierListItemDetailed extends UIPersonnel_SoldierListItem config(Game);
 
 var config int NUM_HOURS_TO_DAYS;
-var config bool ROOKIE_SHOW_PSI, ALWAYS_SHOW_PSI, ALWAYS_SHOW_WEAPONICONS, bFULL_NUM_DISPLAY, bRustyEnableDSLLogging, bRustyExtraIconPositionTest,  bShouldAnimateBond;
-var config bool bSHOW_MAXHEALTH, bSTICKYLIST;
+var config bool ROOKIE_SHOW_PSI, ALWAYS_SHOW_PSI, ALWAYS_SHOW_WEAPONICONS, bFULL_NUM_DISPLAY, bRustyEnableDSLLogging, bRustyExtraIconPositionTest;
+var config bool bSHOW_MAXHEALTH, bSTICKYLIST, bShouldAnimateBond, bShowAttentionBondmateHovered, bShowAttentionBondmateInSquad;
 var config array<string> StatIconPath, APColours, APImagePath, NAColours, NAImagePath;
 var config array<RPGOWeaponCatImage> RPGOWeaponCatImages; //Struct in MoreDetailsManager
 
@@ -1617,7 +1617,7 @@ simulated function FocusBondmateEntry(bool IsFocus)
 			{
 				if (IsFocus)
 				{
-					OtherListItem.NeedsAttention(true);
+					OtherListItem.NeedsAttention(default.bShowAttentionBondmateHovered);
 					OtherListItem.BondIcon.OnReceiveFocus();
 				}
 				else
@@ -1631,7 +1631,7 @@ simulated function FocusBondmateEntry(bool IsFocus)
 		//highlight my icon if my bondmate is in the squad and I am not
 		if (`XCOMHQ.IsUnitInSquad(BondmateRef) && !`XCOMHQ.IsUnitInSquad(UnitRef))
 		{
-			NeedsAttention(true);
+			NeedsAttention(default.bShowAttentionBondmateInSquad);
 			BondIcon.OnReceiveFocus();
 		}
 		else
