@@ -2,7 +2,7 @@
 //  FILE:  X2EventListener_StatusOfDSLRusty            
 //  
 //	File created	11/01/21    12:20
-//	LAST UPDATED    16/07/22	16:30
+//	LAST UPDATED    20/07/23	13:30
 //
 //  This listener uses a CHL event to set the status in the barracks correctly uses CHL issue #322 ++
 //	Also has functions for dealing with LW Officers -- Many thanks to Iridar !!
@@ -16,7 +16,7 @@ var config array<name> OfficerUnitValues, OfficerCharacterTemplates, OfficerSold
 var config array<name> SPARKUnitValues, SPARKCharacterTemplates, SPARKSoldierClasses, SPARKAbilities;
 var config bool bEnableExtraRJSSHeaders, bOnlyOneOfficer, bOneSingleSPARK;
 
-var class<XComGameState_BaseObject> LWOfficerComponentClass;
+//var class<XComGameState_BaseObject> LWOfficerComponentClass;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  SETUP TEMPLATE
@@ -25,17 +25,17 @@ var class<XComGameState_BaseObject> LWOfficerComponentClass;
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
-	local X2EventListener_StatusOfDSLRusty CDO;
+	//local X2EventListener_StatusOfDSLRusty CDO;
 
 	Templates.AddItem(CreateListenerTemplate_StatusOfDSLRusty());
 
 	//	MUCHAS GRACIAS TO IRIDAR !!
-	CDO = X2EventListener_StatusOfDSLRusty(class'XComEngine'.static.GetClassDefaultObject(class'WOTC_DSL_Rusty.X2EventListener_StatusOfDSLRusty'));
-	CDO.LWOfficerComponentClass = class<XComGameState_BaseObject>(class'XComEngine'.static.GetClassByName('XComGameState_Unit_LWOfficer'));
-	if (CDO.LWOfficerComponentClass != none)
-	{
-		`LOG("LWOTC officer component class detected.", class'UIPersonnel_SoldierListItemDetailed'.default.bRustyEnableDSLLogging, 'DSLRusty');
-	}
+	//CDO = X2EventListener_StatusOfDSLRusty(class'XComEngine'.static.GetClassDefaultObject(class'WOTC_DSL_Rusty.X2EventListener_StatusOfDSLRusty'));
+	//CDO.LWOfficerComponentClass = class<XComGameState_BaseObject>(class'XComEngine'.static.GetClassByName('XComGameState_Unit_LWOfficer'));
+	//if (CDO.LWOfficerComponentClass != none)
+	//{
+	//	`LOG("LWOTC officer component class detected.", class'UIPersonnel_SoldierListItemDetailed'.default.bRustyEnableDSLLogging, 'DSLRusty');
+	//}
 
 	return Templates; 
 }
@@ -490,7 +490,8 @@ static final function bool IsUnitOfficer(const out XComGameState_Unit UnitState)
 	local UnitValue	UV;
 	local name ValueName;
 
-	if (default.LWOfficerComponentClass != none && UnitState.FindComponentObject(default.LWOfficerComponentClass) != none)	{ return true; }
+	//if (default.LWOfficerComponentClass != none && UnitState.FindComponentObject(default.LWOfficerComponentClass) != none){ return true; }
+	if (GetIsUnitLWOfficer(UnitState)) { return true; }
 	else if (UnitState.HasAnyOfTheAbilitiesFromAnySource(default.OfficerAbilities))											{ return true; }
 	else if (default.OfficerCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE) 							{ return true; }
 	else if (default.OfficerSoldierClasses.Find(UnitState.GetSoldierClassTemplateName()) != INDEX_NONE)						{ return true; }
@@ -504,6 +505,28 @@ static final function bool IsUnitOfficer(const out XComGameState_Unit UnitState)
 	}
 
 	return false;
+}
+
+static function bool GetIsUnitLWOfficer(XComGameState_Unit Unit)
+{
+	local XComLWTuple Tuple;
+
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'GetLWUnitInfo';
+	Tuple.Data.Add(9);
+	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = false;	//Is the unit an Officer
+	Tuple.Data[1].kind = XComLWTVInt;		Tuple.Data[1].i = -1;		//Officer Rank integer value
+	Tuple.Data[2].kind = XComLWTVString;	Tuple.Data[2].s = "";		//Officer Rank Full Name string
+	Tuple.Data[3].kind = XComLWTVString;	Tuple.Data[3].s = "";		//Officer Rank Short string
+	Tuple.Data[4].kind = XComLWTVString;	Tuple.Data[4].s = "";		//Officer Rank Icon Path
+	Tuple.Data[5].kind = XComLWTVBool;		Tuple.Data[5].b = false;	//Is a Haven Liason
+	Tuple.Data[6].kind = XComLWTVObject;	Tuple.Data[6].o = none;		//XComGameState_WorldRegion object for the region the unit is located in
+	Tuple.Data[7].kind = XComLWTVBool;		Tuple.Data[7].b = false;	//Is the unit Locked in their Haven
+	Tuple.Data[8].kind = XComLWTVBool;		Tuple.Data[8].b = false;	//Is this unit on a mission right now
+
+	`XEVENTMGR.TriggerEvent('GetLWUnitInfo', Tuple, Unit, none);
+
+	return Tuple.Data[0].b;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -525,9 +548,29 @@ static function EventListenerReturn OnUIPSortDone(Object EventData, Object Event
 			if(default.bOnlyOneOfficer) { TryDisableOfficers(SS_Screen); }
 			if(default.bOneSingleSPARK) { TryDisableForSpark(SS_Screen); }
 		}
+
+		RefreshTitle(SS_Screen);
 	}
 
 	return ELR_NoInterrupt;
+}
+
+static function RefreshTitle(UIPersonnel SS_Screen)
+{
+	local string HeaderString;
+
+	if( SS_Screen.m_arrNeededTabs.Length == 1 )
+	{
+		switch( SS_Screen.m_arrNeededTabs[0] )
+		{
+			case eUIPersonnel_Soldiers:		HeaderString = SS_Screen.m_strSoldierTab;	break;
+			case eUIPersonnel_Scientists:	HeaderString = SS_Screen.m_strScientistTab;	break;
+			case eUIPersonnel_Engineers:	HeaderString = SS_Screen.m_strEngineerTab;	break;
+			case eUIPersonnel_Deceased:		HeaderString = SS_Screen.m_strDeceasedTab;	break;
+		}
+
+		SS_Screen.SetScreenHeader(HeaderString $ " [" $ SS_Screen.m_kList.GetItemCount() $ "]" );
+	}
 }
 
 static function TryDisableOfficers(UIScreen Screen)

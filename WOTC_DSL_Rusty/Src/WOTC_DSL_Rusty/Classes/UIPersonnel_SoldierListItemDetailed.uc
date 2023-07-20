@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 05/04/23	03:00
+//	File CREATED 08/12/20	02:00	LAST UPDATED 20/07/23	08:15
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
@@ -14,8 +14,8 @@ var config bool bSHOW_MAXHEALTH, bSTICKYLIST, bShouldAnimateBond, bShowAttention
 var config array<string> StatIconPath, APColours, APImagePath, NAColours, NAImagePath;
 var config array<RPGOWeaponCatImage> RPGOWeaponCatImages; //Struct in MoreDetailsManager
 
-var config bool bHealthAddPerk, bMobAddPerk, bDefenseAddPerk, bDodgeAddPerk, bHackAddPerk, bPsiAddPerk, bAimAddPerk, bWillAddPerk, bArmorAddPerk, bShieldsAddPerk;
-var config bool bHealthAddGear, bMobAddGear, bDefenseAddGear, bDodgeAddGear, bHackAddGear, bPsiAddGear, bAimAddGear, bWillAddGear, bArmorAddGear, bShieldsAddGear;
+var config bool bAddPerk_HP, bAddPerk_Mob, bAddPerk_Def, bAddPerk_Dodge, bAddPerk_Hack, bAddPerk_Psi, bAddPerk_Aim, bAddPerk_Will, bAddPerk_Armour, bAddPerk_Shields;
+var config bool bAddGear_HP, bAddGear_Mob, bAddGear_Def, bAddGear_Dodge, bAddGear_Hack, bAddGear_Psi, bAddGear_Aim, bAddGear_Will, bAddGear_Armour, bAddGear_Shields;
 
 //rank column
 //Officer, SPARK, AP(RPGO), ComInt
@@ -78,9 +78,11 @@ simulated function InitListItem(StateObjectReference initUnitRef)
 	UpdateAdditionalItems(self);
 
 	// HAX: get parent list to manipulate
-	ContainerList = UIList(GetParent(class'UIList'));
-
-	ContainerList.bStickyHighlight = default.bSTICKYLIST;
+	if (default.bSTICKYLIST)
+	{
+		ContainerList = UIList(GetParent(class'UIList'));
+		ContainerList.bStickyHighlight = true;
+	}
 }
 
 ////////////////////////////////////////////////
@@ -140,95 +142,47 @@ simulated function AddAdditionalItems(XComGameState_Unit Unit, UIPersonnel_Soldi
 simulated function SetUnitStats(XComGameState_Unit Unit)
 {
 	local UnitValue RPGOValue;
-	local int HealthCur, HealthMax, Mobility, Defense, Dodge, Hack, Psi, Aim, Will, Armor, Shields;
+	local int HealthCur, HealthMax, WillCur, WillMax;
 
 	// Get Unit base stats and any stat modifications from abilities
     statsAP 		= string(Unit.AbilityPoints);
     
-	HealthCur 			= int(Unit.GetCurrentStat(eStat_HP));
-	if (bHealthAddPerk) { HealthCur += Unit.GetUIStatFromAbilities(eStat_HP); }
-	if (bHealthAddGear) { HealthCur += Unit.GetUIStatFromInventory(eStat_HP); }
+	HealthCur		= GetUnitStatsValue(Unit, eStat_HP, default.bAddPerk_HP, default.bAddGear_HP);
+	HealthMax		= GetUnitStatsValue(Unit, eStat_HP, default.bAddPerk_HP, default.bAddGear_HP, true);
+	HPState 		= HealthCur < HealthMax ? eUIState_Warning : eUIState_Good;
+   	statsHealth 	= default.bSHOW_MAXHEALTH ? HealthCur $"/" $HealthMax : string(HealthCur);
 
-	HealthMax 			= int(Unit.GetMaxStat(eStat_HP));
-	if (bHealthAddPerk) { HealthMax += Unit.GetUIStatFromAbilities(eStat_HP); }
-	if (bHealthAddGear) { HealthMax += Unit.GetUIStatFromInventory(eStat_HP); }
+	WillCur			= GetUnitStatsValue(Unit, eStat_Will, default.bAddPerk_Will, default.bAddGear_Will);
+	WillMax			= GetUnitStatsValue(Unit, eStat_Will, default.bAddPerk_Will, default.bAddGear_Will, true);
+   	statsWill 		= WillCur $"/" $WillMax;
 
-   	statsHealth 	= string(HealthCur);
+	statsMobility 	= string(GetUnitStatsValue(Unit, eStat_Mobility, 		default.bAddPerk_Mob, 		default.bAddGear_Mob));
+	statsDefense 	= string(GetUnitStatsValue(Unit, eStat_Defense, 		default.bAddPerk_Def, 		default.bAddGear_Def));
+	statsDodge 		= string(GetUnitStatsValue(Unit, eStat_Dodge, 			default.bAddPerk_Dodge, 	default.bAddGear_Dodge));
+	statsHack 		= string(GetUnitStatsValue(Unit, eStat_Hacking, 		default.bAddPerk_Hack, 		default.bAddGear_Hack));
+	statsPsi 		= string(GetUnitStatsValue(Unit, eStat_PsiOffense, 		default.bAddPerk_Psi, 		default.bAddGear_Psi));
+	statsAim 		= string(GetUnitStatsValue(Unit, eStat_Offense, 		default.bAddPerk_Aim, 		default.bAddGear_Aim));
 
-	if (default.bSHOW_MAXHEALTH)
-	{
-		statsHealth $= "/" $ HealthMax;
-	}
-
-	HPState = HealthCur < HealthMax ? eUIState_Warning : eUIState_Good;
-
-	Mobility 		= int(Unit.GetCurrentStat(eStat_Mobility));
-	if (bMobAddPerk) { Mobility += Unit.GetUIStatFromAbilities(eStat_Mobility); }
-	if (bMobAddGear) { Mobility += Unit.GetUIStatFromInventory(eStat_Mobility); }
-	statsMobility 	= string(Mobility);
-
-	Defense 		= int(Unit.GetCurrentStat(eStat_Defense));
-	if (bDefenseAddPerk) { Defense += Unit.GetUIStatFromAbilities(eStat_Defense); }
-	if (bDefenseAddGear) { Defense += Unit.GetUIStatFromInventory(eStat_Defense); }
-	statsDefense 	= string(Defense);
-
-	Dodge 			= int(Unit.GetCurrentStat(eStat_Dodge));
-	if (bDodgeAddPerk) { Dodge += Unit.GetUIStatFromAbilities(eStat_Dodge); }
-	if (bDodgeAddGear) { Dodge += Unit.GetUIStatFromInventory(eStat_Dodge); }
-	statsDodge 		= string(Dodge);
-
-	Hack 			= int(Unit.GetCurrentStat(eStat_Hacking));
-	if (bHackAddPerk) { Hack += Unit.GetUIStatFromAbilities(eStat_Hacking); }
-	if (bHackAddGear) { Hack += Unit.GetUIStatFromInventory(eStat_Hacking); }
-	statsHack 		= string(Hack);
-
-	Psi 			= int(Unit.GetCurrentStat(eStat_PsiOffense));
-	if (bPsiAddPerk) { Psi += Unit.GetUIStatFromAbilities(eStat_PsiOffense); }
-	if (bPsiAddGear) { Psi += Unit.GetUIStatFromInventory(eStat_PsiOffense); }
-	statsPsi 		= string(Psi);
-
-	Aim 			= int(Unit.GetCurrentStat(eStat_Offense));
-	if (bAimAddPerk) { Aim += Unit.GetUIStatFromAbilities(eStat_Offense); }
-	if (bAimAddGear) { Aim += Unit.GetUIStatFromInventory(eStat_Offense); }
-	statsAim 		= string(Aim);
-
-	Will 			= int(Unit.GetCurrentStat(eStat_Will));
-	if (bWillAddPerk) { Will += Unit.GetUIStatFromAbilities(eStat_Will); }
-	if (bWillAddGear) { Will += Unit.GetUIStatFromInventory(eStat_Will); }
-	statsWill 		= string(Will) $ "/" $ string(int(Unit.GetMaxStat(eStat_Will)));
-
-	//Armor			= int(Unit.GetCurrentStat(eStat_ArmorMitigation));
-	Armor	 		= int(Unit.GetArmorMitigationForUnitFlag());
-	if (bArmorAddPerk) { Armor += Unit.GetUIStatFromAbilities(eStat_ArmorMitigation); }
-	if (bArmorAddGear) { Armor += Unit.GetUIStatFromInventory(eStat_ArmorMitigation); }
-	statsArmor 		= string(Armor);
-
-	Shields 		= int(Unit.GetCurrentStat(eStat_ShieldHP));
-	if (bShieldsAddPerk) { Shields += Unit.GetUIStatFromAbilities(eStat_ShieldHP); }
-	if (bShieldsAddGear) { Shields += Unit.GetUIStatFromInventory(eStat_ShieldHP); }
-	statsShields 	= string(Shields);
+	statsArmor 		= string(GetUnitStatsValue(Unit, eStat_ArmorMitigation,	default.bAddPerk_Armour, 	default.bAddGear_Armour));
+	statsShields 	= string(GetUnitStatsValue(Unit, eStat_ShieldHP, 		default.bAddPerk_Shields,	default.bAddGear_Shields));
 
 	statsMissions	= string(Unit.GetNumMissions());
-	statsXP 		= GetPromotionProgress(Unit);
 	statsKills 		= string(Unit.GetNumKills());
+	statsXP 		= GetPromotionProgress(Unit);
 	statsPCS 		= GetPCSString(Unit);
 	PCSImage 		= GetPCSImageForUnit(Unit); 
 
-	if(Unit.GetName(eNameType_Nick) == " ")
-	{
-		strUnitName = CAPS(Unit.GetName(eNameType_First) @ Unit.GetName(eNameType_Last));
-	}
-	else
-	{
-		strUnitName = CAPS(Unit.GetName(eNameType_First) @ Unit.GetName(eNameType_Nick) @ Unit.GetName(eNameType_Last));
-	}
+	if(Unit.GetName(eNameType_Nick) == " ")	{ strUnitName = CAPS(Unit.GetName(eNameType_First) @ Unit.GetName(eNameType_Last));	}
+	else	{ strUnitName = CAPS(Unit.GetName(eNameType_First) @ Unit.GetName(eNameType_Nick) @ Unit.GetName(eNameType_Last));	}
 
 	LoadoutImageP = GetRPGOCatImage(X2WeaponTemplate(Unit.GetPrimaryWeapon().GetMyTemplate()).WeaponCat);
 	LoadoutImageS = GetRPGOCatImage(X2WeaponTemplate(Unit.GetSecondaryWeapon().GetMyTemplate()).WeaponCat);
-	//LoadoutImageT = GetRPGOCatImage(X2WeaponTemplate(Unit.Get-ITEMSLOT-.GetMyTemplate()).WeaponCat); // can't confirm item in pistol slot will be weapon or how to get pistol slot
+
+	// <> TODO : can't confirm item in pistol slot will be weapon or how to get pistol slot
+	//LoadoutImageT = GetRPGOCatImage(X2WeaponTemplate(Unit.Get-ITEMSLOT-.GetMyTemplate()).WeaponCat); 
 
 	Unit.GetUnitValue('NaturalAptitude', RPGOValue);	intAptitude = int(RPGOValue.fValue);
-	Unit.GetUnitValue('StatPoints', RPGOValue);			statsRPGO = string(int(RPGOValue.fValue));
+	Unit.GetUnitValue('StatPoints', RPGOValue);			statsRPGO 	= string(int(RPGOValue.fValue));
 
 	//YES things are offset here so they appear correct in the log, stop changing it damn OCD !!
 	`LOG( "RUSTY DSL PANEL INITIED FOR UNIT \n"
@@ -254,6 +208,26 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 		 $"APTITUDE		[" @intAptitude @"] \n"
 		 $"RPGOSTAT		[" @statsRPGO @"]"
 		 , default.bRustyEnableDSLLogging, 'DSLRusty_STATS');
+}
+
+	///////////////////////////////////////////////
+    //	FIND STAT COMBINED VALUE
+	///////////////////////////////////////////////
+
+simulated function int GetUnitStatsValue(XComGameState_Unit Unit, ECharStatType Stat, bool bAddPerk, bool bAddGear, optional bool bIsMax)
+{
+	local int StatValue;
+
+	//GET BASE VALUE, ARMOUR IS DIFFERENT, FIGURE OUT IF WE NEED MAX OR CURRENT
+	if (Stat == eStat_ArmorMitigation )	{ StatValue = int(Unit.GetArmorMitigationForUnitFlag()); }
+	else	 { StatValue = bIsMax ? int(Unit.GetMaxStat(Stat)) : int(Unit.GetCurrentStat(Stat)); }
+
+	//ADD TO STAT VALUE FROM VARIOUS PLACES
+	if (bAddPerk) { StatValue += Unit.GetUIStatFromAbilities(Stat); }
+	if (bAddGear) { StatValue += Unit.GetUIStatFromInventory(Stat); }
+
+	//RETURN COMBINED TOTAL
+	return StatValue;
 }
 
 	///////////////////////////////////////////////
@@ -807,9 +781,30 @@ simulated function UpdateData()
 	local XComGameState_ResistanceFaction FactionState;
 	local StackedUIIconData StackedClassIcon, EmptyIconInfo; // Variable for issue #1134 and #295
 
+	local XComLWTuple Tuple;
+
+	//FOR THIS UNIT
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
 
-	iRank = Unit.GetRank();
+	//==================================================
+	//CHECK LW OFFICER STATUS
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'GetLWUnitInfo';
+	Tuple.Data.Add(9);
+	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = false;	//Is the unit an Officer
+	Tuple.Data[1].kind = XComLWTVInt;		Tuple.Data[1].i = -1;		//Officer Rank integer value
+	Tuple.Data[2].kind = XComLWTVString;	Tuple.Data[2].s = "";		//Officer Rank Full Name string
+	Tuple.Data[3].kind = XComLWTVString;	Tuple.Data[3].s = "";		//Officer Rank Short string
+	Tuple.Data[4].kind = XComLWTVString;	Tuple.Data[4].s = "";		//Officer Rank Icon Path
+	Tuple.Data[5].kind = XComLWTVBool;		Tuple.Data[5].b = false;	//Is a Haven Liason
+	Tuple.Data[6].kind = XComLWTVObject;	Tuple.Data[6].o = none;		//XComGameState_WorldRegion object for the region the unit is located in
+	Tuple.Data[7].kind = XComLWTVBool;		Tuple.Data[7].b = false;	//Is the unit Locked in their Haven
+	Tuple.Data[8].kind = XComLWTVBool;		Tuple.Data[8].b = false;	//Is this unit on a mission right now
+
+	`XEVENTMGR.TriggerEvent('GetLWUnitInfo', Tuple, Unit, none);
+	//==================================================
+
+	iRank = Tuple.Data[0].b ? Tuple.Data[1].i : Unit.GetRank();
 
 	SoldierClass = Unit.GetSoldierClassTemplate();
 	FactionState = Unit.GetResistanceFaction();
@@ -825,8 +820,8 @@ simulated function UpdateData()
 		// Use the Community Highlander function so that we work with mods that use the unit status hooks it provides.
 		class'UIUtilities_Strategy'.static.GetPersonnelStatusSeparate(Unit, status, statusTimeLabel, statusTimeValue);
 
-		rankIcon  = Unit.GetSoldierRankIcon(iRank);			// Issue #408
-		rankshort = Unit.GetSoldierShortRankName(iRank);
+		rankIcon  = Tuple.Data[0].b ? Tuple.Data[4].s : Unit.GetSoldierRankIcon(iRank);			// Issue #408
+		rankshort = Tuple.Data[0].b ? Tuple.Data[3].s : Unit.GetSoldierShortRankName(iRank);
 		classIcon = Unit.GetSoldierClassIcon();				// Issue #106
 		classname = Unit.GetSoldierClassDisplayName();
 	}
@@ -836,8 +831,8 @@ simulated function UpdateData()
 		GetPersonnelStatusSeparate(Unit, status, statusTimeLabel, statusTimeValue);
 
 		//OLD methods to get the information that do not require CHL !ugh!
-		rankIcon  = class'UIUtilities_Image'.static.GetRankIcon(iRank, SoldierClass.DataName);
-		rankshort = `GET_RANK_ABBRV(Unit.GetRank(), SoldierClass.DataName);
+		rankIcon  = Tuple.Data[0].b ? Tuple.Data[4].s : class'UIUtilities_Image'.static.GetRankIcon(iRank, SoldierClass.DataName);
+		rankshort = Tuple.Data[0].b ? Tuple.Data[3].s : `GET_RANK_ABBRV(Unit.GetRank(), SoldierClass.DataName);
 		classIcon = SoldierClass.IconImage;
 		classname = SoldierClass != None ? SoldierClass.DisplayName : "";
 	}
@@ -1694,7 +1689,7 @@ simulated function RefreshTooltipText()
 		//add linebreak if we had disabled details
 		if (textTooltip != "") { textTooltip $= "\n\n"; }
 
-		textTooltip $= Repl(BondmateTooltip, "%SOLDIERNAME", ColorText(Caps(Bondmate.GetName(eNameType_RankFull)), "3CEDD4") );
+		textTooltip $= Repl(BondmateTooltip, "%SOLDIERNAME", ColorText(Caps(Bondmate.GetName(eNameType_FullNick)), "3CEDD4") );
 	}
 	else if( Unit.ShowBondAvailableIcon(BondmateRef, BondData) )
 	{

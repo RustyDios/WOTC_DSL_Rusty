@@ -10,7 +10,7 @@ STEAM DESC		https://steamcommunity.com/sharedfiles/filedetails/?id=2832773856
 ===================================================================================
 [h1] What is this? [/h1]
 This is my REDUX of [b]-bg-[/b]'s amazing [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1128263618] Detailed Soldier List [/url].
-I have been sitting on this mod redux for well over a year waiting on some contact from [b]-bg-[/b] with no reponse given. Decided it had enough changes to get released. It also bridges the gap between playing in CI, LWOTC, RPGO or even Amalgamation. This is truly "One DSL to Rule Them All" ... ..
+I had been sitting on this mod redux for well over a year waiting on some contact from [b]-bg-[/b] with no reponse given. Decided it had enough changes to get released. It also bridges the gap between playing in CI, LWOTC, RPGO or even Amalgamation. This is truly "One DSL to Rule Them All" ... ..
 
 For those that don't know what the original mod does;
 This shows more details in the Soldier List screen, this is now more important than ever due to will, psionics and different stats from covert actions.
@@ -58,10 +58,11 @@ Overwrites [b]UIPersonnel_SoldierListItem[/b] - Entire thing changed
 [strike]Overwrites [b]UIPersonnel[/b] - Change to [i]sort functions[/i] to use 'better' methods[/strike]
 These options are now in [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2857715600] Rusty DSL Redux Sorting Options Plugin [/url]
 
-[strike]As such will NOT work with[b]LWOTC[/b] or [b]RPGO[/b] as it has its own DSL with features not present here.[/strike]
+[strike]Will NOT work with[b]LWOTC[/b] or [b]RPGO[/b] as they have a DSL with features not present here.[/strike]
 [b]Will not work with the Original DSL version.[/b]
 
-Works fine with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2781186785] Custom Hero Class Icons [/url]
+Works well with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2965980985] Extended Personnel Info Redux[/url]
+Works with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2781186785] Custom Hero Class Icons [/url]
 Works fine with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2567230730] Covert Infiltration [/url] ...
 Works fine with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2428993550] Amalgamation [/url]
 -- ensure the Amalgamation DSL MCO is commented out (Which it now is by default!)
@@ -74,11 +75,12 @@ Many thanks to [b]-bg-[/b] and [b]Pavonis/LW[/b] for the originals this is based
 Many thanks to [b]Kdm2K6[/b] and [b]LWOTCPeter[/b] for their LWOTC improvements code.
 Huge thanks to [b]Iridar[/b], [b]Xymanek[/b] and [b]Robojumper[/b] for consultations of UI code.
 Huge thanks AGAIN to [b]Iridar[/b] for 'Officer Component' code for LWotC!!
+Huge thanks to [b]Tedster[/b] for updates to LWotC allowing for display of Officer Rank & Icon!
 
-Many thanks to [b]MrCloista[b] and [b]TeslaRage[/b] for helping BetaTest this version.
-Many thanks to [b]Illogical[b] and [b]TedStar[/b] for testing the LWOTC compatibility.
+Many thanks to [b]MrCloista[/b] and [b]TeslaRage[/b] for helping BetaTest this version.
+Many thanks to [b]Illogical[/b] and [b]Tedster[/b] for testing the LWOTC compatibility.
 
-Translations; Russian by [b]Aks[/b], Spanish by [b]TARDIS[/b]
+Translations; Russian by [b]Aks[/b], Spanish by [b]TARDIS[/b], German by [b]holgerschlegel[/b]
 
 As always an appreciation to the XCOM2 and MEME Modding discords for support :)
 
