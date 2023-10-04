@@ -337,7 +337,7 @@ simulated function string GetPromotionProgress(XComGameState_Unit Unit)
 {
 	local X2SoldierClassTemplate ClassTemplate;
 	local string promoteProgress;
-	local int NumKills;
+	local int NumKills, NextRankThreshold, KillAssistValue;
 
 	if (Unit.IsSoldier()) { ClassTemplate = Unit.GetSoldierClassTemplate();	}
 	else { return "--";	}
@@ -347,6 +347,9 @@ simulated function string GetPromotionProgress(XComGameState_Unit Unit)
 		return "--";
 	}
 
+	NextRankThreshold = class'X2ExperienceConfig'.static.GetRequiredKills(Unit.GetSoldierRank() + 1);
+	KillAssistValue = max(1, ClassTemplate.KillAssistsPerKill); //minimum value is 1 for multiplication, because some mods might not set this at all and default is 0
+
     if (default.bFULL_NUM_DISPLAY)
     {
 		NumKills  = Round(Unit.KillCount);															// Basic Kills Made
@@ -355,19 +358,19 @@ simulated function string GetPromotionProgress(XComGameState_Unit Unit)
 		NumKills += class'X2ExperienceConfig'.static.GetRequiredKills(Unit.StartingRank);			// Add required kills of StartingRank
 		NumKills += Round((Unit.WetWorkKills * class'X2ExperienceConfig'.default.NumKillsBonus));	// Increase kills for WetWork bonus if appropriate - DEPRECATED
 
-		NumKills = NumKills * ClassTemplate.KillAssistsPerKill;										// Multiply the above for Kill Assists 'Full' Count
+		NumKills = NumKills * KillAssistValue;														// Multiply the above for Kill Assists 'Full' Count
 
 		//NumKills += Round(Unit.GetNumKillsFromAssists());											// Add number of kills from assists - Using Split Method
 		NumKills += Round(Unit.KillAssistsCount);													// Add number of kills from assists
 		NumKills += Round(Unit.PsiCredits);															// Add number of kills from psi assists
 
-		NumKills = Unit.TriggerOverrideTotalNumKills(NumKills / ClassTemplate.KillAssistsPerKill) * ClassTemplate.KillAssistsPerKill;	//CHL Override for total
+		NumKills = Unit.TriggerOverrideTotalNumKills(NumKills / KillAssistValue) * KillAssistValue;	//CHL Override for total, to include LW Mission Based XP!
 
-		promoteProgress = NumKills $ "/" $ class'X2ExperienceConfig'.static.GetRequiredKills(Unit.GetSoldierRank() + 1) * ClassTemplate.KillAssistsPerKill;
+		promoteProgress = NumKills $ "/" $ NextRankThreshold * KillAssistValue;
 	}
 	else
     {
-        promoteProgress = Unit.GetTotalNumKills() $ "/" $ class'X2ExperienceConfig'.static.GetRequiredKills(Unit.GetSoldierRank() + 1);
+        promoteProgress = Unit.GetTotalNumKills() $ "/" $ NextRankThreshold;
     }
 
 	return promoteProgress;
@@ -1490,8 +1493,17 @@ simulated function UpdateDisabled()
 	local float UpdateAlpha;
 	local UIIcon PerkIcon;
 
-	if(Icon_FlagTopNrm != none && Icon_FlagTopNrm.bIsVisible && IsDisabled) { Icon_FlagTopNrm.Hide(); Icon_FlagTopDis.Show(); }
-	if(Icon_FlagBotNrm != none && Icon_FlagBotNrm.bIsVisible && IsDisabled) { Icon_FlagBotNrm.Hide(); Icon_FlagBotDis.Show(); }
+	if(Icon_FlagTopNrm != none && Icon_FlagTopDis != none)
+	{
+		if(IsDisabled) 	{ Icon_FlagTopNrm.Hide(); Icon_FlagTopDis.Show(); }
+		else  			{ Icon_FlagTopNrm.Show(); Icon_FlagTopDis.Hide(); }
+	}
+
+	if(Icon_FlagBotNrm != none && Icon_FlagBotDis != none)
+	{
+		if(IsDisabled) 	{ Icon_FlagBotNrm.Hide(); Icon_FlagBotDis.Show(); }
+		else			{ Icon_FlagBotNrm.Show(); Icon_FlagBotDis.Hide(); }
+	}
 
 	UpdateAlpha = (IsDisabled ? DisabledAlpha : 1.0f);
 
