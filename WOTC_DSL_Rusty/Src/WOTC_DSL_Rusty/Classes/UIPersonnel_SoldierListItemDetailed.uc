@@ -830,10 +830,7 @@ simulated function UpdateData()
 	//	LOCATION, TIME AND MENTAL STATUS DISPLAY
 	///////////////////////////////////////////////
 
-	statusTimeValue = "---";
 	mentalStatus = "";
-	UnitLoc = "";
-
 	if(ShouldDisplayMentalStatus(Unit))
 	{
 		//CHL IMPROVED MENTAL STATUS
@@ -846,7 +843,10 @@ simulated function UpdateData()
 		}
 	}
 
+	if (statusTimeValue == "") { statusTimeValue = "---"; }
+
 	// if personnel is not staffed, don't show location
+	UnitLoc = "";
 	if( class'UIUtilities_Strategy'.static.DisplayLocation(Unit) )
     {
 		UnitLoc = class'UIUtilities_Strategy'.static.GetPersonnelLocation(Unit);
