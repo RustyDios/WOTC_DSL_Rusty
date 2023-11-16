@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 20/07/23	08:15
+//	File CREATED 08/12/20	02:00	LAST UPDATED 12/11/23	21:00
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
@@ -9,13 +9,16 @@
 class UIPersonnel_SoldierListItemDetailed extends UIPersonnel_SoldierListItem config(Game);
 
 var config int NUM_HOURS_TO_DAYS;
-var config bool ROOKIE_SHOW_PSI, ALWAYS_SHOW_PSI, ALWAYS_SHOW_WEAPONICONS, bFULL_NUM_DISPLAY, bRustyEnableDSLLogging, bRustyExtraIconPositionTest;
+var config array<name> PSI_CLASSES;
+var config bool POSITIVE_SHOW_PSI, ROOKIE_SHOW_PSI, ALWAYS_SHOW_PSI, ALWAYS_SHOW_WEAPONICONS, bFULL_NUM_DISPLAY, bRustyEnableDSLLogging, bRustyExtraIconPositionTest;
 var config bool bSHOW_MAXHEALTH, bSTICKYLIST, bShouldAnimateBond, bShowAttentionBondmateHovered, bShowAttentionBondmateInSquad;
 var config array<string> StatIconPath, APColours, APImagePath, NAColours, NAImagePath;
 var config array<RPGOWeaponCatImage> RPGOWeaponCatImages; //Struct in MoreDetailsManager
 
 var config bool bAddPerk_HP, bAddPerk_Mob, bAddPerk_Def, bAddPerk_Dodge, bAddPerk_Hack, bAddPerk_Psi, bAddPerk_Aim, bAddPerk_Will, bAddPerk_Armour, bAddPerk_Shields;
 var config bool bAddGear_HP, bAddGear_Mob, bAddGear_Def, bAddGear_Dodge, bAddGear_Hack, bAddGear_Psi, bAddGear_Aim, bAddGear_Will, bAddGear_Armour, bAddGear_Shields;
+
+var config int AWCTemplatesDisplayLength, TraitTemplatesDisplayLength;
 
 //rank column
 //Officer, SPARK, AP(RPGO), ComInt
@@ -29,7 +32,7 @@ var UIImage	Icon_Slot2, Icon_Slot3,	Icon_Slot4,	Icon_Slot5,	Icon_Slot6, Icon_Slo
 var UIText  Text_Slot2,	Text_Slot3,	Text_Slot4,	Text_Slot5, Text_Slot6, Text_Slot7, Text_Slot8, Text_Slot9;
 
 var float IconXPos, IconYPos, IconXDelta, IconScale, IconToTextOffsetX, IconToTextOffsetY, IconXDeltaSmallValue, DisabledAlpha;
-var float TraitIconX, AbilityIconX, TraitIconY, AbilityIconY, PerkPanelSize;
+var float TraitIconX, AbilityIconX, TraitIconY, AbilityIconY;
 
 //perk displays
 var UIPanel BadTraitPanel, BonusAbilityPanel;
@@ -376,9 +379,9 @@ simulated function string GetPromotionProgress(XComGameState_Unit Unit)
 	return promoteProgress;
 }
 
-	///////////////////////////////////////////////
+	/////////////////////////////////////////////////////
     //	CONSTRUCT TIME VALUE - NON CHL
-	///////////////////////////////////////////////
+	/////////////////////////////////////////////////////
 
 static function GetTimeLabelValue(int Hours, out int TimeValue, out string TimeLabel)
 {	
@@ -402,9 +405,10 @@ static function GetTimeLabelValue(int Hours, out int TimeValue, out string TimeL
 	}
 }
 
-	///////////////////////////////////////////////
+	/////////////////////////////////////////////////////
     //	STATUS DISPLAY MESSAGE - NON CHL
-	///////////////////////////////////////////////
+	//	TECHNICALLY NOT NEEDED ANYMORE BUT KEPT FOR REF
+	/////////////////////////////////////////////////////
 
 static function GetStatusStringsSeparate(XComGameState_Unit Unit, out string Status, out string TimeLabel, out int TimeValue)
 {
@@ -415,14 +419,10 @@ static function GetStatusStringsSeparate(XComGameState_Unit Unit, out string Sta
 	Tuple = new class'LWTuple';
 	Tuple.Id = 'CustomizeStatusStringsSeparate';
 	Tuple.Data.Add(4);
-	Tuple.Data[0].kind = LWTVBool;
-	Tuple.Data[0].b = false;
-	Tuple.Data[1].kind = LWTVString;
-	Tuple.Data[1].s = Status;
-	Tuple.Data[2].kind = LWTVString;
-	Tuple.Data[2].s = TimeLabel;
-	Tuple.Data[3].kind = LWTVInt;
-	Tuple.Data[3].i = TimeValue;
+	Tuple.Data[0].kind = LWTVBool;		Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = LWTVString;	Tuple.Data[1].s = Status;
+	Tuple.Data[2].kind = LWTVString;	Tuple.Data[2].s = TimeLabel;
+	Tuple.Data[3].kind = LWTVInt;		Tuple.Data[3].i = TimeValue;
 
 	`XEVENTMGR.TriggerEvent('CustomizeStatusStringsSeparate', Tuple, Unit);
 
@@ -474,9 +474,10 @@ static function GetStatusStringsSeparate(XComGameState_Unit Unit, out string Sta
 	}
 }
 
-	///////////////////////////////////////////////
+	/////////////////////////////////////////////////////
     //	PERSONNEL STATUS - NON CHL
-	///////////////////////////////////////////////
+	//	TECHNICALLY NOT NEEDED ANYMORE BUT KEPT FOR REF
+	/////////////////////////////////////////////////////
 
 static function GetPersonnelStatusSeparate(XComGameState_Unit Unit, out string Status, out string TimeLabel, out string TimeValue, optional int FontSizeZ = -1, optional bool bIncludeMentalState = false)
 {
@@ -638,12 +639,8 @@ simulated function bool ShouldShowIcon_FlagTopNrm(XComGameState_Unit Unit)
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'ShouldShowIcon_FlagTopNrm';
 	Tuple.Data.Add(2);
-	Tuple.Data[0].kind = XComLWTVBool;
-	Tuple.Data[0].b = false;
-	Tuple.Data[1].kind = XComLWTVName;
-	Tuple.Data[1].n = nameof(Screen.class);
-
-	Tuple.Data[0].b = false;
+	Tuple.Data[0].kind = XComLWTVBool;	Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = XComLWTVName;	Tuple.Data[1].n = nameof(Screen.class);
 
 	`XEVENTMGR.TriggerEvent('DSLShouldShowIcon_FlagTopNrm', Tuple, Unit);
 
@@ -661,12 +658,8 @@ simulated function bool ShouldShowIcon_FlagBotNrm(XComGameState_Unit Unit)
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'ShouldShowIcon_FlagBotNrm';
 	Tuple.Data.Add(2);
-	Tuple.Data[0].kind = XComLWTVBool;
-	Tuple.Data[0].b = false;
-	Tuple.Data[1].kind = XComLWTVName;
-	Tuple.Data[1].n = nameof(Screen.class);
-
-	Tuple.Data[0].b = false;
+	Tuple.Data[0].kind = XComLWTVBool;	Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = XComLWTVName;	Tuple.Data[1].n = nameof(Screen.class);
 
 	`XEVENTMGR.TriggerEvent('DSLShouldShowIcon_FlagBotNrm', Tuple, Unit);
 
@@ -682,32 +675,30 @@ simulated function bool ShouldShowPsi(XComGameState_Unit Unit)
 	local LWTuple Tuple;	//OLDTUPLE SO OLD
 
 	//we have no reason not to show any more so we can just override for this DSL redux
-    if (default.ALWAYS_SHOW_PSI)
-    {
-		return true;
-    }
+    if (default.ALWAYS_SHOW_PSI) { return true; }
 
+	//create tuple here so we can set our config as a default and then mods can override if they want
+	//personally not sure the purpose of sending the screen class name but need to keep it for backwards compatibility
 	Tuple = new class'LWTuple';
 	Tuple.Id = 'ShouldShowPsi';
 	Tuple.Data.Add(2);
-	Tuple.Data[0].kind = LWTVBool;
-	Tuple.Data[0].b = false;
-	Tuple.Data[1].kind = LWTVName;
-	Tuple.Data[1].n = nameof(Screen.class);
+	Tuple.Data[0].kind = LWTVBool;	Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = LWTVName;	Tuple.Data[1].n = nameof(Screen.class);
 
-	Tuple.Data[0].b = false;
-
-	if (Unit.IsPsiOperative() || Unit.GetSoldierClassTemplateName() == 'Psionic' || Unit.GetSoldierClassTemplateName() == 'RustyPsionic')
+	//config setings from this mod
+	if (Unit.IsPsiOperative()
+		|| (default.PSI_CLASSES.Find(Unit.GetSoldierClassTemplateName()) != INDEX_NONE)
+		|| (default.ROOKIE_SHOW_PSI && Unit.GetRank() == 0)
+		|| (default.POSITIVE_SHOW_PSI && Unit.GetCurrentStat(eStat_PsiOffense) > 0 )
+	)
 	{
 		Tuple.Data[0].b = true;
 	}
-    else if (default.ROOKIE_SHOW_PSI && Unit.GetRank() == 0 ) //&& !Unit.CanRankUpSoldier() && `XCOMHQ.IsTechResearched('Psionics'))
-   	{
-		Tuple.Data[0].b = true;
-	}
 
+	//allow other mods to override or adjust
 	`XEVENTMGR.TriggerEvent('DSLShouldShowPsi', Tuple, Unit);
 
+	//return result
 	return Tuple.Data[0].b;
 }
 
@@ -726,10 +717,8 @@ static function bool ShouldDisplayWeaponIcons( optional XComGameState_Unit Unit)
 
 	Tuple = new class'XComLWTuple';
 	Tuple.Data.Add(2);
-	Tuple.Data[0].kind = XComLWTVBool;
-	Tuple.Data[0].b = false;
-	Tuple.Data[1].kind = XComLWTVObject;
-	Tuple.Data[1].o = Unit;
+	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = XComLWTVObject;	Tuple.Data[1].o = Unit;
 
 	`XEVENTMGR.TriggerEvent('DSLShouldDisplayWeaponIcons', Tuple);
 
@@ -743,13 +732,13 @@ static function bool ShouldDisplayWeaponIcons( optional XComGameState_Unit Unit)
 simulated protected function bool ShouldDisplayMentalStatus (XComGameState_Unit Unit)
 {
 	// Use the Community Highlander event so that we work with mods that use the mental status display override hook
-	if (class'X2DownloadableContentInfo_WOTC_DSL_Rusty'.default.bForceHighlanderMethod)
-	{
+	//if (class'X2DownloadableContentInfo_WOTC_DSL_Rusty'.default.bForceHighlanderMethod)
+	//{
 		return TriggerShouldDisplayMentalStatus(Unit);
-	}
+	//}
 
 	// Fallback to default logic
-	return Unit.IsActive();
+	//return Unit.IsActive();
 }
 
 //copied from CHL Start issue #651
@@ -759,10 +748,8 @@ simulated protected function bool TriggerShouldDisplayMentalStatus (XComGameStat
 
 	Tuple = new class'XComLWTuple';
 	Tuple.Data.Add(2);
-	Tuple.Data[0].kind = XComLWTVBool;
-	Tuple.Data[0].b = Unit.IsActive();
-	Tuple.Data[1].kind = XComLWTVObject;
-	Tuple.Data[1].o = Unit;
+	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = Unit.IsActive(); //FALLBACK TO DEFAULT LOGIC
+	Tuple.Data[1].kind = XComLWTVObject;	Tuple.Data[1].o = Unit;
 
 	`XEVENTMGR.TriggerEvent('SoldierListItem_ShouldDisplayMentalStatus', Tuple, self);
 
@@ -779,7 +766,7 @@ simulated function UpdateData()
 	local string flagIcon, rankIcon, rankShort, classIcon, classname, mentalStatus, status, statusTimeLabel, statusTimeValue, UnitLoc;
 	local int iRank, iTimeNum, BondLevel;
 	
-	local X2SoldierClassTemplate SoldierClass;
+	//local X2SoldierClassTemplate SoldierClass;
 
 	local XComGameState_ResistanceFaction FactionState;
 	local StackedUIIconData StackedClassIcon, EmptyIconInfo; // Variable for issue #1134 and #295
@@ -789,8 +776,11 @@ simulated function UpdateData()
 	//FOR THIS UNIT
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
 
+	//ABORT IF UNIT DOES NOT EXIST! HOW?
+	if (Unit == none) { return;	}
+
 	//==================================================
-	//CHECK LW OFFICER STATUS
+	//CHECK LW UNIT/OFFICER STATUS
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'GetLWUnitInfo';
 	Tuple.Data.Add(9);
@@ -807,44 +797,42 @@ simulated function UpdateData()
 	`XEVENTMGR.TriggerEvent('GetLWUnitInfo', Tuple, Unit, none);
 	//==================================================
 
-	iRank = Tuple.Data[0].b ? Tuple.Data[1].i : Unit.GetRank();
-
-	SoldierClass = Unit.GetSoldierClassTemplate();
-	FactionState = Unit.GetResistanceFaction();
-
-	flagIcon = Unit.GetCountryTemplate().FlagImage;
-
 	///////////////////////////////////////////////
 	//	RANK AND CLASS ICONS FROM CHL OR NOT
 	///////////////////////////////////////////////
 
-	if (class'X2DownloadableContentInfo_WOTC_DSL_Rusty'.default.bForceHighlanderMethod )
-	{
+	//AS CHL IS NOW HARDCODED REQUIRED MOD JUST COMMENT OUT THE OTHER METHODS HERE
+	//if (class'X2DownloadableContentInfo_WOTC_DSL_Rusty'.default.bForceHighlanderMethod )
+	//{
 		// Use the Community Highlander function so that we work with mods that use the unit status hooks it provides.
 		class'UIUtilities_Strategy'.static.GetPersonnelStatusSeparate(Unit, status, statusTimeLabel, statusTimeValue);
 
+		iRank 	  = Tuple.Data[0].b ? Tuple.Data[1].i : Unit.GetRank();
 		rankIcon  = Tuple.Data[0].b ? Tuple.Data[4].s : Unit.GetSoldierRankIcon(iRank);			// Issue #408
 		rankshort = Tuple.Data[0].b ? Tuple.Data[3].s : Unit.GetSoldierShortRankName(iRank);
 		classIcon = Unit.GetSoldierClassIcon();				// Issue #106
 		classname = Unit.GetSoldierClassDisplayName();
-	}
-	else
-	{
+	//}
+	//else
+	//{
 		//Use THIS MODS internal function, updated with some CHL features
-		GetPersonnelStatusSeparate(Unit, status, statusTimeLabel, statusTimeValue);
+	//	GetPersonnelStatusSeparate(Unit, status, statusTimeLabel, statusTimeValue);
 
 		//OLD methods to get the information that do not require CHL !ugh!
-		rankIcon  = Tuple.Data[0].b ? Tuple.Data[4].s : class'UIUtilities_Image'.static.GetRankIcon(iRank, SoldierClass.DataName);
-		rankshort = Tuple.Data[0].b ? Tuple.Data[3].s : `GET_RANK_ABBRV(Unit.GetRank(), SoldierClass.DataName);
-		classIcon = SoldierClass.IconImage;
-		classname = SoldierClass != None ? SoldierClass.DisplayName : "";
-	}
+	//	SoldierClass = Unit.GetSoldierClassTemplate();
+	//	rankIcon  = Tuple.Data[0].b ? Tuple.Data[4].s : class'UIUtilities_Image'.static.GetRankIcon(iRank, SoldierClass.DataName);
+	//	rankshort = Tuple.Data[0].b ? Tuple.Data[3].s : `GET_RANK_ABBRV(Unit.GetRank(), SoldierClass.DataName);
+	//	classIcon = SoldierClass.IconImage;
+	//	classname = SoldierClass != None ? SoldierClass.DisplayName : "";
+	//}
 
 	///////////////////////////////////////////////
-	//	MENTAL STATE DISPLAY
+	//	LOCATION, TIME AND MENTAL STATUS DISPLAY
 	///////////////////////////////////////////////
 
+	statusTimeValue = "---";
 	mentalStatus = "";
+	UnitLoc = "";
 
 	if(ShouldDisplayMentalStatus(Unit))
 	{
@@ -852,33 +840,16 @@ simulated function UpdateData()
 		GetUnitMentalState(Unit, mentalStatus, statusTimeLabel, iTimeNum);
 		statusTimeLabel = class'UIUtilities_Text'.static.GetColoredText(statusTimeLabel, Unit.GetMentalStateUIState());
 
-		if(iTimeNum == 0)
-		{
-			statusTimeValue = "";
-		}
-		else
+		if(iTimeNum != 0)
 		{
 			statusTimeValue = class'UIUtilities_Text'.static.GetColoredText(string(iTimeNum), Unit.GetMentalStateUIState());
 		}
 	}
 
-	///////////////////////////////////////////////
-	//	LOCATION AND TIME STATUS
-	///////////////////////////////////////////////
-
-	if( statusTimeValue == "" )
-    {
-		statusTimeValue = "---";
-    }
-
 	// if personnel is not staffed, don't show location
 	if( class'UIUtilities_Strategy'.static.DisplayLocation(Unit) )
     {
 		UnitLoc = class'UIUtilities_Strategy'.static.GetPersonnelLocation(Unit);
-    }
-	else
-    {
-		UnitLoc = "";
     }
 
 	///////////////////////////////////////////////////////////////
@@ -902,6 +873,8 @@ simulated function UpdateData()
 	//	THIS IS SENDING THE INFO TO FLASH OBJECT
 	///////////////////////////////////////////////
 
+	flagIcon = Unit.GetCountryTemplate().FlagImage;
+
 	AS_UpdateDataSoldier(
 		Caps(Unit.GetName(eNameType_Full)),
 		Caps(Unit.GetName(eNameType_Nick)),
@@ -913,9 +886,9 @@ simulated function UpdateData()
 		statusTimeValue $"\n" $ Class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(Class'UIUtilities_Text'.static.GetSizedText( statusTimeLabel, 12)),
 		UnitLoc,
 		flagIcon,
-		false, //<> TODO: is disabled - LEFTOVER COMMENT from base game file, this mod handles disabled - RustyDios
+		false, // is disabled - LEFTOVER COMMENT from base game file, this mod handles disabled - RustyDios
 		Unit.ShowPromoteIcon(),
-		false, // psi soldiers can't rank up via missions
+		false, // psi soldiers cant rank up via missions - LEFTOVER COMMENT from base game file - RustyDios
 		mentalStatus,
 		BondLevel
 	);
@@ -924,7 +897,9 @@ simulated function UpdateData()
 	//	FACTION ICON	 Inc Issue #1134, #295
 	///////////////////////////////////////////////
 
+	FactionState = Unit.GetResistanceFaction();
 	StackedClassIcon = Unit.GetStackedClassIcon();
+
 	if (StackedClassIcon.Images.Length > 0)
 	{
 		AS_SetFactionIcon(StackedClassIcon);
@@ -935,7 +910,7 @@ simulated function UpdateData()
 	}
 	else
 	{
-		// Preserve backwards compatibility in case AS_SetFactionIcon() is overridden via an MCO.
+		// Preserve backwards compatibility in case AS_SetFactionIcon() is overridden via an MCO, like us?.
 		AS_SetFactionIcon(EmptyIconInfo);
 	}
 
@@ -949,8 +924,11 @@ simulated function UpdateData()
 	//	TOOLTIP TEXT FOR PERKS AND FINISH UPDATE
 	///////////////////////////////////////////////
 
+	//YES THIS NEEDS TO RUN TWICE FOR SOME REASON OR ELSE IT GETS CHOKED OUT FOR ITEMS PAST THE FIRST PAGE ??
+	//I DON'T UNDERSTAND WHY THIS IS NOR DO I CARE TO UNDERSTAND WHY THIS IS, ONLY THAT THIS WORKS WHEN RUN TWICE AND NOT OTHERWISE
+	//<> TODO : FURTHER INVESTIGATION ?!
 	RefreshTooltipText();
-	RefreshTooltipText(); //YES it needs to run twice for some reason or else it gets choked out for items past the first page ??
+	RefreshTooltipText();
 }
 
 //////////////////////////////////////////////////////////
@@ -1012,7 +990,7 @@ function UpdateBondIconAndBar(XComGameState_Unit Unit, out int BondLevel)
 }
 
 ///////////////////////////////////////////////
-//	update for visibility/colours/etc
+//	UPDATE FOR FOCUS/DISABLED COLOURS
 ///////////////////////////////////////////////
 
 function UpdateAdditionalItems(UIPersonnel_SoldierListItem ListItem)
@@ -1146,7 +1124,7 @@ function AddBondIconAndBar()
 
 function InitBondIconAndBar(StateObjectReference BondmateRef, SoldierBond BondData)
 {
-	if( BondIcon == none )
+	if( BondIcon == none || BondProgressBar == none)
 	{
 		AddBondIconAndBar();
 	}
@@ -1202,9 +1180,11 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	local X2AbilityTemplateManager			AbilityTemplateManager;
 	local X2AbilityTemplate 				AbilityTemplate;
 
+	local X2SoldierClassTemplate SoldierClass;
+
 	local int i, idx, AWCRank, AWCRow;
 
-	/* <>SLOT 2 */ IconXPos = 170;						if(Icon_Slot2 == none || Text_Slot2 == none) { AddStatSlot(Icon_Slot2, Text_Slot2, "2", StatIconPath[2]); } // Health/Aim	/ Armour
+	/* <>SLOT 2 */ IconXPos = 170;						if(Icon_Slot2 == none || Text_Slot2 == none) { AddStatSlot(Icon_Slot2, Text_Slot2, "2", StatIconPath[0]); } // Health/Aim	/ Armour
 	/* <>SLOT 3 */ IconXPos += IconXDeltaSmallValue +6;	if(Icon_Slot3 == none || Text_Slot3 == none) { AddStatSlot(Icon_Slot3, Text_Slot3, "3", StatIconPath[1]); } // Mobility		/ Shields
 	/* <>SLOT 4 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot4 == none || Text_Slot4 == none) { AddStatSlot(Icon_Slot4, Text_Slot4, "4", StatIconPath[2]); } // Dodge		/ Missions
 	/* <>SLOT 5 */ IconXPos += IconXDeltaSmallValue;	if(Icon_Slot5 == none || Text_Slot5 == none) { AddStatSlot(Icon_Slot5, Text_Slot5, "5", StatIconPath[6]); } // Defense		/ XP Progress
@@ -1238,28 +1218,41 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	IconXPos = 454;
 
     // Bad Traits Panel spawn
-	if (BadTraitPanel == none)
+	if (BadTraitPanel == none )
 	{
-		PerkPanelSize = 3;
-		AddPerkPanel (BadTraitPanel, 'BadTraitIcons_List_RD', PerkPanelSize);
-
-		EventTemplateManager = class'X2EventListenerTemplateManager'.static.GetEventListenerTemplateManager();
+		AddPerkPanel (BadTraitPanel, 'BadTraitIcons_List_RD', default.TraitTemplatesDisplayLength);
 
 		//bad traits panel fill
-		for (i = 0; i < Unit.AcquiredTraits.Length; i++)
-		{
-			TraitTemplate = X2TraitTemplate(EventTemplateManager.FindEventListenerTemplate(Unit.AcquiredTraits[i]));
-			if (TraitTemplate != none)
-			{
-				TraitTemplates.AddItem(TraitTemplate);
+		TraitTemplates.length = 0;
+		BadTraitIcons.length = 0;
 
+		if (default.TraitTemplatesDisplayLength > 0)
+		{
+			EventTemplateManager = class'X2EventListenerTemplateManager'.static.GetEventListenerTemplateManager();
+
+			for (i = 0; i < Unit.AcquiredTraits.Length; i++)
+			{
+				TraitTemplate = X2TraitTemplate(EventTemplateManager.FindEventListenerTemplate(Unit.AcquiredTraits[i]));
+				if (TraitTemplate != none)
+				{
+					//Add if not already there
+					if (TraitTemplates.Find(TraitTemplate) == INDEX_NONE)
+					{
+						TraitTemplates.AddItem(TraitTemplate);
+					}
+				}
+			}
+
+			//Now we have gathered the Trait perks
+			foreach TraitTemplates(TraitTemplate)
+			{
 				BadTraitIcons.AddItem(Spawn(class'UIIcon', BadTraitPanel)); 
 				idx = BadTraitIcons.length -1;
 				InitPerkIcon(BadTraitIcons[idx], name("TraitIcon_ListItem_RD_" $ idx), TraitTemplate.IconImage, TraitIconX, TraitIconY);
 				TraitIconX += IconToTextOffsetX;
 
 				//Hide Icons past the limit
-				if (TraitIconX > IconToTextOffsetX*PerkPanelSize) { BadTraitIcons[idx].Hide(); }
+				if (TraitIconX > (IconToTextOffsetX * default.TraitTemplatesDisplayLength) ) { BadTraitIcons[idx].Hide(); }
 			}
 		}
 	}
@@ -1270,67 +1263,74 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 	//2ND PAGE detailed AWC abilities spawn
 	if (BonusAbilityPanel == none)
 	{
-		PerkPanelSize = 5;
-		AddPerkPanel (BonusAbilityPanel, 'BonusAbilityIcons_List_RD', PerkPanelSize);
+		AddPerkPanel (BonusAbilityPanel, 'BonusAbilityIcons_List_RD', default.AWCTemplatesDisplayLength);
 
-		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-		AWCRank = Unit.GetRank();
+		//awc perks panel fill
+		AWCTemplates.length = 0;
+		BonusAbilityIcons.length = 0;
 
-		//Grab any ACTUAL AWC Perks the unit might have unlocked
-		for (i = 0 ; i < Unit.AWCAbilities.Length ; i++)
+		if (default.AWCTemplatesDisplayLength > 0)
 		{
-			AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AWCAbilities[i].AbilityType.AbilityName);
-			if (AbilityTemplate != none && Unit.AWCAbilities[i].bUnlocked && AWCRank >= Unit.AWCAbilities[i].iRank)
+			AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+			SoldierClass = Unit.GetSoldierClassTemplate();
+			AWCRank = Unit.GetRank(); //this is a check rank
+
+			//Grab any ACTUAL AWC Perks the unit might have unlocked
+			for (i = 0 ; i < Unit.AWCAbilities.Length ; i++)
 			{
-				//Add if not already there
-				if (AWCTemplates.Find(AbilityTemplate) == INDEX_NONE)
+				AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AWCAbilities[i].AbilityType.AbilityName);
+				if (AbilityTemplate != none && Unit.AWCAbilities[i].bUnlocked && AWCRank >= Unit.AWCAbilities[i].iRank)
 				{
-					AWCTemplates.AddItem(AbilityTemplate);
+					//Add if not already there
+					if (AWCTemplates.Find(AbilityTemplate) == INDEX_NONE)
+					{
+						AWCTemplates.AddItem(AbilityTemplate);
+					}
 				}
 			}
-		}
 
-		//detailed AWC fill from last row of class tree, note does not count for hero units or units that are not allowed AWC
-		if (class'X2SoldierClass_DefaultChampionClasses'.default.ChampionClasses.Find(Unit.GetSoldierClassTemplateName()) != INDEX_NONE)
-		{
-			//Do nothing, it was a hero unit
-		}
-		else if (Unit.GetSoldierClassTemplate().bAllowAWCAbilities)
-		{
-			// we ASSUME that the last row is the XCOM/AWC random deck row
-			// we also ASSUME that the localisation is set up correctly to have the correct number of titles!
-			// <> TODO : Make this better!
-			AWCRow = Max(0, Unit.GetSoldierClassTemplate().AbilityTreeTitles.Length - 1);
-			AWCRank = Unit.GetSoldierClassTemplate().GetMaxConfiguredRank();
-
-			//Check each rank for any perks in the last row that the soldier has purchased, don't check SQD
-			for (i = 1; i <= AWCRank; i++)
+			//detailed AWC fill from last row of class tree, note does not count for hero units or units that are not allowed AWC
+			if (class'X2SoldierClass_DefaultChampionClasses'.default.ChampionClasses.Find(Unit.GetSoldierClassTemplateName()) != INDEX_NONE)
 			{
-				if (Unit.AbilityTree[i].Abilities.Length > AWCRow )
+				//Do nothing, it was a hero unit
+			}
+			else if (SoldierClass.bAllowAWCAbilities)
+			{
+				// we ASSUME that the last row is the XCOM/AWC random deck row
+				// we also ASSUME that the localisation is set up correctly to have the correct number of titles!
+				// <> TODO : Make this better!
+				AWCRow = Max(0, SoldierClass.AbilityTreeTitles.Length - 1);
+				AWCRank = SoldierClass.GetMaxConfiguredRank(); //this is all ranks the class has, 7/8
+
+				//Check each rank for any perks in the last row that the soldier has purchased, don't check SQD
+				for (i = 1; i <= AWCRank; i++)
 				{
-					AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AbilityTree[i].Abilities[AWCRow].AbilityName);
-					if (AbilityTemplate != none && Unit.HasSoldierAbility(Unit.AbilityTree[i].Abilities[AWCRow].AbilityName))
+					if (Unit.AbilityTree[i].Abilities.Length > AWCRow )
 					{
-						//Add if not existing
-						if (AWCTemplates.Find(AbilityTemplate) == INDEX_NONE)
+						AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AbilityTree[i].Abilities[AWCRow].AbilityName);
+						if (AbilityTemplate != none && Unit.HasSoldierAbility(Unit.AbilityTree[i].Abilities[AWCRow].AbilityName))
 						{
-							AWCTemplates.AddItem(AbilityTemplate);
+							//Add if not existing
+							if (AWCTemplates.Find(AbilityTemplate) == INDEX_NONE)
+							{
+								AWCTemplates.AddItem(AbilityTemplate);
+							}
 						}
 					}
 				}
 			}
-		}
 
-		//Now we have gathered the AWC perks
-		foreach AWCTemplates(AbilityTemplate)
-		{
-			BonusAbilityIcons.AddItem(Spawn(class'UIIcon', BonusAbilityPanel));
-			idx = BonusAbilityIcons.Length - 1;
-			InitPerkIcon(BonusAbilityIcons[idx], name("AbilityIcon_ListItem_RD_" $ idx), AbilityTemplate.IconImage, AbilityIconX, AbilityIconY);
-			AbilityIconX += IconToTextOffsetX;
+			//Now we have gathered the AWC perks we want to display
+			foreach AWCTemplates(AbilityTemplate)
+			{
+				BonusAbilityIcons.AddItem(Spawn(class'UIIcon', BonusAbilityPanel));
+				idx = BonusAbilityIcons.Length - 1;
+				InitPerkIcon(BonusAbilityIcons[idx], name("AbilityIcon_ListItem_RD_" $ idx), AbilityTemplate.IconImage, AbilityIconX, AbilityIconY);
+				AbilityIconX += IconToTextOffsetX;
 
-			//Hide Icons past the limit
-			if (AbilityIconX > IconToTextOffsetX*PerkPanelSize) { BonusAbilityIcons[idx].Hide(); }
+				//Hide Icons past the limit
+				if (AbilityIconX > (IconToTextOffsetX * default.AWCTemplatesDisplayLength) ) { BonusAbilityIcons[idx].Hide(); }
+			}
 		}
 	}
 
@@ -1720,7 +1720,10 @@ simulated function RefreshTooltipText()
 		//add perk names if any (we gathered these earlier)
 		foreach AWCTemplates(AbilityTemplate)
 		{
-			textTooltip $= AbilityTemplate.LocFriendlyName $"\n";
+			if (AbilityTemplate != none)
+			{
+				textTooltip $= AbilityTemplate.LocFriendlyName $"\n";
+			}
 		}
 	}
 	else if (Unit.AcquiredTraits.length > 0)
@@ -1734,8 +1737,11 @@ simulated function RefreshTooltipText()
 			//start new line for new trait
 			if (traitTooltip != "") { traitTooltip $= "\n"; }
 
-			traitTooltip $= ColorText(TraitTemplate.TraitFriendlyName, TraitTemplate.bPositiveTrait ? "53B45E" : "BF1E2E");
-			traitTooltip $= "\n -" @ TraitTemplate.TraitDescription;
+			if (TraitTemplate != none)
+			{
+				traitTooltip $= ColorText(TraitTemplate.TraitFriendlyName, TraitTemplate.bPositiveTrait ? "53B45E" : "BF1E2E");
+				traitTooltip $= "\n -" @ TraitTemplate.TraitDescription;
+			}
 		}
 
 		//merge previous and trait tooltips

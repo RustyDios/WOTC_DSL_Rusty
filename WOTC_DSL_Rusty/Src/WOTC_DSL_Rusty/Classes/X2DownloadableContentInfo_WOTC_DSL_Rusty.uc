@@ -2,29 +2,30 @@
 //  FILE:   XComDownloadableContentInfo_WOTC_DSL_Rusty.uc                                    
 //
 //	CREATED BY RUSTYDIOS	08/12/20	02:00
-//	LAST EDITED				31/03/23	12:00
+//	LAST EDITED				12/11/23	21:10
 //
 //---------------------------------------------------------------------------------------
 
 class X2DownloadableContentInfo_WOTC_DSL_Rusty extends X2DownloadableContentInfo;
 
-var config bool IsRequiredCHLInstalled, bForceHighlanderMethod, bRPGODetected;
+//var config bool IsRequiredCHLInstalled, bForceHighlanderMethod;
 
-var private config bool bIsRPGOLoaded;
-var private config bool bIsRPGOLoadedChecked;
+var config bool bRPGODetected;
+var private config bool bIsRPGOLoaded, bIsRPGOLoadedChecked;
 
 // Copied from robojumper's SquadSelect. Checks whether the Community Highlander
 // is active and meets the given minimum version requirement.
+//	HIGHLANDER IS NOW A HARD REQUIRED MOD, WE DONT CARE WHAT VERSION
 static function bool IsCHLMinVersionInstalled(int iMajor, int iMinor)
 {
-	if (default.bForceHighlanderMethod)
-	{
+	//if (default.bForceHighlanderMethod)
+	//{
 		return true;
-	}
+	//}
 	
-	return class'CHXComGameVersionTemplate'.default.MajorVersion > iMajor ||
-		(class'CHXComGameVersionTemplate'.default.MajorVersion == iMajor &&
-		 class'CHXComGameVersionTemplate'.default.MinorVersion >= iMinor);
+	//return class'CHXComGameVersionTemplate'.default.MajorVersion > iMajor ||
+	//	(class'CHXComGameVersionTemplate'.default.MajorVersion == iMajor &&
+	//	 class'CHXComGameVersionTemplate'.default.MinorVersion >= iMinor);
 }
 
 static event OnLoadedSavedGame(){}
@@ -69,12 +70,12 @@ static event InstallNewCampaign(XComGameState StartState){}
 //static event ModifyTacticalTransferStartState(XComGameState TransferStartState){}
 //static event OnExitPostMissionSequence(){}
 
-// Added in Community Highlander 1.18, so if this is called, the highlander is
-// guaranteed to be loaded.
-static function OnPreCreateTemplates()
-{
-	default.IsRequiredCHLInstalled = IsCHLMinVersionInstalled(1, 19);
-}
+// Added in Community Highlander 1.18, so if this is called, the highlander is guaranteed to be loaded.
+//	HIGHLANDER IS NOW A HARD REQUIRED MOD, WE DONT CARE WHAT VERSION
+//static function OnPreCreateTemplates()
+//{
+//	default.IsRequiredCHLInstalled = IsCHLMinVersionInstalled(1, 19);
+//}
 
 //static event OnPostTemplatesCreated(){}
 //static event OnDifficultyChanged(){}

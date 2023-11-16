@@ -174,3 +174,60 @@ UILibrary_RPGO_DSL.loadout_icon_vektor_rifle
 UILibrary_RPGO_DSL.loadout_icon_wristblade
 
 ADD MORE CATEGORIES -- FIND A WAY TO MAKE CONFIG LOCALISATION
+
+================================================================================
+Events and tuples, might not be fully accurate, some events overridden by CHL standards
+
+GetStatusStringsSeparate
+
+	Tuple = new class'LWTuple';
+	Tuple.Id = 'CustomizeStatusStringsSeparate';
+	Tuple.Data.Add(4);
+	Tuple.Data[0].kind = LWTVBool;		Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = LWTVString;	Tuple.Data[1].s = Status;
+	Tuple.Data[2].kind = LWTVString;	Tuple.Data[2].s = TimeLabel;
+	Tuple.Data[3].kind = LWTVInt;		Tuple.Data[3].i = TimeValue;
+
+	`XEVENTMGR.TriggerEvent('CustomizeStatusStringsSeparate', Tuple, Unit);
+
+---
+ShouldShowIcon_FlagTopNrm
+ShouldShowIcon_FlagBotNrm
+
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'ShouldShowIcon_FlagTopNrm';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind = XComLWTVBool;	Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = XComLWTVName;	Tuple.Data[1].n = nameof(Screen.class);
+
+	`XEVENTMGR.TriggerEvent('DSLShouldShowIcon_FlagTopNrm', Tuple, Unit);
+
+---
+ShouldShowPsi
+
+	Tuple = new class'LWTuple';
+	Tuple.Id = 'ShouldShowPsi';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind = LWTVBool;	Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = LWTVName;	Tuple.Data[1].n = nameof(Screen.class);
+
+	`XEVENTMGR.TriggerEvent('DSLShouldShowPsi', Tuple, Unit);
+---
+ShouldDisplayWeaponIcons
+
+	Tuple = new class'XComLWTuple';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = false;
+	Tuple.Data[1].kind = XComLWTVObject;	Tuple.Data[1].o = Unit;
+
+	`XEVENTMGR.TriggerEvent('DSLShouldDisplayWeaponIcons', Tuple);
+---
+TriggerShouldDisplayMentalStatus
+
+	Tuple = new class'XComLWTuple';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = Unit.IsActive(); //FALLBACK TO DEFAULT LOGIC
+	Tuple.Data[1].kind = XComLWTVObject;	Tuple.Data[1].o = Unit;
+
+	`XEVENTMGR.TriggerEvent('SoldierListItem_ShouldDisplayMentalStatus', Tuple, self);
+---
