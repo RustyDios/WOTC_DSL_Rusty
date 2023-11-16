@@ -491,47 +491,31 @@ simulated function array<UISummary_DSL_Legend> GetRPGOStats()
 
 static public function string GetLocalizedCategory(name Key)
 {
-	local string defaultreturn;
+	local string LocalisedString;
+	//local XComLWTuple Tuple;
 
-	switch (Key)
+	//attempt to query the highlander events for a response
+	// !! CANT DO as they require templates as event source !!
+	//Tuple = new class'XComLWTuple';
+	//Tuple.Id = 'GetLocalizedItemCategory';
+	//Tuple.Data.Add(1);
+	//Tuple.Data[0].kind = XComLWTVString;	Tuple.Data[0].s = string(Key);
+	//`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, ITEMTEMPLATE, none);
+
+	//Tuple.Id = 'GetLocalizedCategory';
+	//`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, WEAPONTEMPLATE, none);
+
+	//attempt to find in the localisation file
+	//the return string is [ ?INT?WOTC_DSL_RustyXGLocalisedData_DSL.WOTC_DSL_Rusty.key ] if not found
+	LocalisedString = CAPS(Localize("XGLocalisedData_DSL", string(Key), "WOTC_DSL_Rusty"));
+
+	if (InStr(LocalisedString, "?INT?") != INDEX_NONE)
 	{
-		case 'rifle': 				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryRifle); 				break;
-		case 'sniper_rifle':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySniperRifle);		break;
-		case 'cannon':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryCannon); 			break;
-		case 'shotgun':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryShotgun); 			break;
-		case 'gauntlet':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryGauntlet); 			break;
-		case 'vektor_rifle':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryVektorRifle);		break;
-		case 'bullpup':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryBullpup); 			break;
-		case 'SMG':					return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySMG);	 			break;
-		case 'pistol':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryPistol); 			break;
-		case 'sword':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySword); 				break;
-		case 'gremlin':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryGremlin); 			break;
-		case 'grenade_launcher':	return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryGrenadeLauncher);	break;
-		case 'claymore':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryClaymore); 			break;
-		case 'claymoreP':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryClaymoreP);			break;
-		case 'wristblade':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryWristblade);			break;
-		case 'sidearm':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySidearm); 			break;
-		case 'psiamp':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryPsiamp); 			break;
-		case 'replace_psiamp':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryPsiamp); 			break;
-		case 'psiamp_pm':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryPsiampPM); 			break;
-		case 'sparkrifle':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySparkrifle);			break;
-		case 'sparkbit':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySparkBit);			break;
-		case 'spark_shield':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySparkShield);		break;
-		case 'combatknife':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryCombatknife);		break;
-		case 'arcthrower':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryArcthrower);			break;
-		case 'holotargeter':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryHolotargeter);		break;
-		case 'lw_gauntlet':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryLWGauntlet);			break;
-		case 'lwgauntlet':			return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryLWGauntlet);			break;
-		case 'sawedoffshotgun':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategorySawedoffshotgun);	break;
-		case 'Heavy':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryHeavy); 				break;
-		case 'psionicreaper':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryPsionicReaper);	 	break;
-		case 'psigatlingrifle':		return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryPsiGatlingRifle);	break;
-		case 'empty':				return CAPS(class'XGLocalisedData_DSL'.default.ItemCategoryEmpty); 				break;
+		//backup in case not found
+		LocalisedString = CAPS(string(key));
+		LocalisedString = Repl(LocalisedString,"IRI_","");
+		LocalisedString = Repl(LocalisedString,"_", " ");
 	}
 
-	defaultreturn = string(key);
-	defaultreturn = Repl(defaultreturn,"iri_","");
-	defaultreturn = Repl(defaultreturn,"_", " ");
-	
-	return CAPS(defaultreturn);
+	return LocalisedString;
 }
