@@ -121,7 +121,7 @@ static function EventListenerReturn OnPersonnelStatusTime(Object EventData, Obje
 	if (Tuple.Data[0].b) 
 	{
 		`LOG("TIME TUPLE DATA SKP: WAS MENTAL", bLogs, 'DSLRusty');
-		return ELR_NoInterrupt; //no change for mental states ?
+		return ELR_NoInterrupt; //no change for mental states as they are already worked out ?
 	}
 	
 	if (TimeValue <= 0 || TimeValue > 8760 ) // Ignore year long missions and paused stuff/completed?  24*365 = 8760 = 1yr
@@ -151,6 +151,7 @@ static function EventListenerReturn OnPersonnelStatusTime(Object EventData, Obje
 	{
 		//convert back to hours
 		TimeValue = TimeValue * 24;
+		TimeLabel = HourString;
 
 		`LOG("TIME TUPLE DATA WAS IN DAYS. CONVERTED BACK TO HOURS", bLogs, 'DSLRusty');
 	}
@@ -158,8 +159,8 @@ static function EventListenerReturn OnPersonnelStatusTime(Object EventData, Obje
 	//FIND OUR THRESHOLD VALUE
 	Thresholds = class'UIPersonnel_SoldierListItemDetailed'.default.NUM_HOURS_TO_DAYS;
 
-	//as long as the conversion is set positive, and not set to HOURS already
-	if ( Thresholds > 0 && InStr(TimeLabel, HourString) == INDEX_NONE )
+	//as long as the conversion is set positive with Hours in
+	if ( Thresholds > 0 && InStr(TimeLabel, HourString) != INDEX_NONE )
 	{
 		//above the threshold is displayed in days, below displayed in hours
 		if (TimeValue > Thresholds )
