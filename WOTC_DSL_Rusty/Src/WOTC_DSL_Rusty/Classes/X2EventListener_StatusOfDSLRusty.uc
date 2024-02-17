@@ -151,7 +151,6 @@ static function EventListenerReturn OnPersonnelStatusTime(Object EventData, Obje
 	{
 		//convert back to hours
 		TimeValue = TimeValue * 24;
-		TimeLabel = HourString;
 
 		`LOG("TIME TUPLE DATA WAS IN DAYS. CONVERTED BACK TO HOURS", bLogs, 'DSLRusty');
 	}
@@ -159,8 +158,8 @@ static function EventListenerReturn OnPersonnelStatusTime(Object EventData, Obje
 	//FIND OUR THRESHOLD VALUE
 	Thresholds = class'UIPersonnel_SoldierListItemDetailed'.default.NUM_HOURS_TO_DAYS;
 
-	//as long as the conversion is set positive with Hours in
-	if ( Thresholds > 0 && InStr(TimeLabel, HourString) != INDEX_NONE )
+	//as long as the conversion is set positive without Hours set
+	if ( Thresholds > 0 && InStr(TimeLabel, HourString) == INDEX_NONE )
 	{
 		//above the threshold is displayed in days, below displayed in hours
 		if (TimeValue > Thresholds )
