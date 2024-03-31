@@ -340,17 +340,22 @@ simulated function string GetPromotionProgress(XComGameState_Unit Unit)
 {
 	local X2SoldierClassTemplate ClassTemplate;
 	local string promoteProgress;
-	local int NumKills, NextRankThreshold, KillAssistValue;
+	local int NumKills, XPThreshold, KillAssistValue;
 
+    //BAIL FOR NON SOLDIER UNITS
 	if (Unit.IsSoldier()) { ClassTemplate = Unit.GetSoldierClassTemplate();	}
 	else { return "--";	}
 
-	if (ClassTemplate == none || Unit.GetSoldierRank() >= ClassTemplate.GetMaxConfiguredRank() || ClassTemplate.bBlockRankingUp)
+    // BAIL FOR NO CLASS
+	// BAIL FOR UNITS THAT DONT RANK UP (PSI OPS, BUILDABLE UNITS, SHEN, CENTRAL, VIPS) AND CONFIG SET TO BLOCK TOO 
+	// BAIL FOR MAX RANK UNITS THAT ARE NOT ROOKIES (AS ROOKIE HAS ONLY 1 RANK SO WOULD ALWAYS BE MAX RANK)
+	if (ClassTemplate == none || Unit.GetSoldierRank() >= ClassTemplate.GetMaxConfiguredRank() && ClassTemplate.DataName != 'Rookie' || ClassTemplate.bBlockRankingUp)
 	{
 		return "--";
 	}
 
-	NextRankThreshold = class'X2ExperienceConfig'.static.GetRequiredKills(Unit.GetSoldierRank() + 1);
+    // ===== DISPLAY ===== //
+	XPThreshold = class'X2ExperienceConfig'.static.GetRequiredKills(Unit.GetSoldierRank() + 1);
 	KillAssistValue = max(1, ClassTemplate.KillAssistsPerKill); //minimum value is 1 for multiplication, because some mods might not set this at all and default is 0
 
     if (default.bFULL_NUM_DISPLAY)
@@ -369,11 +374,12 @@ simulated function string GetPromotionProgress(XComGameState_Unit Unit)
 
 		NumKills = Unit.TriggerOverrideTotalNumKills(NumKills / KillAssistValue) * KillAssistValue;	//CHL Override for total, to include LW Mission Based XP!
 
-		promoteProgress = NumKills $ "/" $ NextRankThreshold * KillAssistValue;
+		promoteProgress = NumKills $ "/" $ XPThreshold * KillAssistValue;
 	}
 	else
     {
-        promoteProgress = Unit.GetTotalNumKills() $ "/" $ NextRankThreshold;
+		NumKills = Unit.GetTotalNumKills();
+        promoteProgress = NumKills $ "/" $ XPThreshold;
     }
 
 	return promoteProgress;

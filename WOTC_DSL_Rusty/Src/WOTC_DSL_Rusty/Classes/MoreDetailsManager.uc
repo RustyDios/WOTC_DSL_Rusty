@@ -211,8 +211,9 @@ simulated function AddHelp()
 		//would never be used in a game where a mouse is active, because 'select' simulates a mouse-click
 		NavHelp.AddSelectNavHelp(); 
 
-		// Don't allow jumping to the geoscape from the armory in the tutorial, controller[Y]
-		if (class'XComGameState_HeadquartersXCom'.static.GetObjectiveStatus('T0_M7_WelcomeToGeoscape') != eObjectiveState_InProgress )
+		// Don't allow jumping to the geoscape from the armory in the tutorial or when coming from squad select, controller[Y] 
+		if (class'XComGameState_HeadquartersXCom'.static.GetObjectiveStatus('T0_M7_WelcomeToGeoscape') != eObjectiveState_InProgress 
+			&& !`SCREENSTACK.IsInStack(class'UISquadSelect') )
 		{
 			NavHelp.AddGeoscapeButton();
 		}
