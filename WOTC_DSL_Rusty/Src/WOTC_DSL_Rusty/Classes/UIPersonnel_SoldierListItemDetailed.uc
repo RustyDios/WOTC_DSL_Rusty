@@ -394,7 +394,7 @@ static function GetTimeLabelValue(int Hours, out int TimeValue, out string TimeL
 	if (Hours < 0 || Hours > 24 * 30 * 12) // Ignore year long missions
 	{
 		TimeValue = 0;
-		TimeLabel = "";
+		TimeLabel = "-+-";
 		return;
 	}
 
@@ -614,6 +614,7 @@ static function GetUnitMentalState(XComGameState_Unit UnitState, out string Stat
 			if(WillProject.ProjectFocus.ObjectID == UnitState.ObjectID)
 			{
 				iHours = WillProject.GetCurrentNumHoursRemaining();
+				TimeValue = iHours;
 
 				// Start Issue #322
 				class'UIUtilities_Strategy'.static.TriggerOverridePersonnelStatusTime(UnitState, true, TimeLabel, TimeValue);
