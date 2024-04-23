@@ -80,7 +80,7 @@ Huge thanks to [b]Tedster[/b] for updates to LWotC allowing for display of Offic
 Many thanks to [b]MrCloista[/b] and [b]TeslaRage[/b] for helping BetaTest this version.
 Many thanks to [b]Illogical[/b] and [b]Tedster[/b] for testing the LWOTC compatibility.
 
-Translations; Russian by [b]Aks[/b], Spanish by [b]TARDIS[/b], German by [b]holgerschlegel[/b]
+Translations; Russian by [b]Aks[/b], Spanish by [b]TARDIS[/b], German by [b]holgerschlegel[/b], Simplified Chinese by [b]Tommy[/b]
 
 As always an appreciation to the XCOM2 and MEME Modding discords for support :)
 
