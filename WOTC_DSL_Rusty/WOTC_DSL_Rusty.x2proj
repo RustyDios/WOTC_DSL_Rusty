@@ -41,6 +41,7 @@
     <Content Include="Localization\WOTC_DSL_Rusty.deu" />
     <Content Include="Localization\WOTC_DSL_Rusty.esn" />
     <Content Include="Localization\WOTC_DSL_Rusty.rus" />
+    <Content Include="Localization\WOTC_DSL_Rusty.chn" />
     <Content Include="Src\LW_Tuple\Classes\LWTuple.uc">
       <SubType>Content</SubType>
     </Content>
