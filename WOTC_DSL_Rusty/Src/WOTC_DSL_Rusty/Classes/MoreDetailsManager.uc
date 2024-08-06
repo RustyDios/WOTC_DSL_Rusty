@@ -2,7 +2,7 @@
 //  FILE:    MoreDetailsManager.uc
 //
 //	CREATED BY BOUNTYGIVER	08/12/20	02:00
-//	EDITED	BY RUSTYDIOS	17/07/22	21:00
+//	EDITED	BY RUSTYDIOS	05/08/24	04:15
 //
 //	CONTROLS DISPLAYS OF EXTRA DSL OPTIONS LIKE DETAILS BUTTON AND LEGEND
 //
@@ -76,14 +76,11 @@ simulated function UIPanel InitPanel(optional name InitName, optional name InitL
 	super.InitPanel(InitName, InitLibID);
 
 	bRPGODetected = class'X2DownloadableContentInfo_WOTC_DSL_Rusty'.static.IsRPGOLoaded();
-	bDisplayWeaponIcons = class'UIPersonnel_SoldierListItemDetailed'.static.ShouldDisplayWeaponIcons() ;
+	bDisplayWeaponIcons = class'UIPersonnel_SoldierListItemDetailed'.static.ShouldDisplayWeaponIcons(none, bRPGODetected) ;
 
 	BuildLegendPanel();
 
-	if (bRPGODetected || bDisplayWeaponIcons )
-	{
-		BuildRPGOPanel();
-	}
+	if (bRPGODetected || bDisplayWeaponIcons ) { BuildRPGOPanel(); }
 
 	//HIDE UNTILL CALLED
 	IsLegendOpen = false;

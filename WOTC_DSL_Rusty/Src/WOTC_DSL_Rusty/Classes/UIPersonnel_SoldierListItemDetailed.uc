@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 12/11/23	21:00
+//	File CREATED 08/12/20	02:00	LAST UPDATED 05/08/24	04:00
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
@@ -46,9 +46,10 @@ var float BondIconX, BondIconY, BondBarWidth, BondBarHeight;
 
 //other values
 var bool bIsFocussed, bShouldHideBonds, bShouldShowBondProgressBar, bShouldShowDetailed, bRPGODetected;
-var string strUnitName, strClassName, PCSImage, LoadoutImageP, LoadoutImageS, DisabledToolTipText;
-var string statsRPGO, statsAP, statsHealth, statsMobility, statsDodge, statsDefense, statsHack, statsPsi, statsAim, statsWill, statsArmor, statsShields, statsMissions, statsXP, statsKills, statsPCS;
-var int intAptitude;
+var string strUnitName, strClassName, PCSImage, PCSName, PCSStats, LoadoutImageP, LoadoutImageS, DisabledToolTipText;
+var string statsRPGO, statsAP, statsHealth, statsMobility, statsDodge, statsDefense, statsHack, statsPsi, statsAim, statsWill;
+var string statsArmor, statsShields, statsMissions, statsXP, statsKills;
+var int intAptitude, Text_Slot9_X_WILL, Text_Slot9_X_PCS, Icon_Slot9_X_WILL, Icon_Slot9_X_PCS;
 var eUIState PCSState, HPState;
 
 //from parents values
@@ -172,8 +173,12 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 	statsMissions	= string(Unit.GetNumMissions());
 	statsKills 		= string(Unit.GetNumKills());
 	statsXP 		= GetPromotionProgress(Unit);
-	statsPCS 		= GetPCSString(Unit);
-	PCSImage 		= GetPCSImageForUnit(Unit); 
+	
+	//PCSStats 		= GetPCSString(Unit);
+	//PCSImage 		= GetPCSImageForUnit(Unit);
+	//PCSName		= GetPCSNameForUnit(Unit);
+
+	SetPCSDetails(Unit); // PCSStats, PCSImage, PCSName, PCSState
 
 	if(Unit.GetName(eNameType_Nick) == " ")	{ strUnitName = CAPS(Unit.GetName(eNameType_First) @ Unit.GetName(eNameType_Last));	}
 	else	{ strUnitName = CAPS(Unit.GetName(eNameType_First) @ Unit.GetName(eNameType_Nick) @ Unit.GetName(eNameType_Last));	}
@@ -190,8 +195,8 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 	//YES things are offset here so they appear correct in the log, stop changing it damn OCD !!
 	`LOG( "RUSTY DSL PANEL INITIED FOR UNIT \n"
 		 $"UNIT NAME	[" @strUnitName @"] \n"
-		 $"PRIMARY		[" @LoadoutImageP @"] \n"
-		 $"SECONDARY	[" @LoadoutImageS @"] \n"
+		 $"PRIMARY	IMG	[" @LoadoutImageP @"] \n"
+		 $"SECONDARY IMG[" @LoadoutImageS @"] \n"
 		 $"AP			[" @statsAP @"] \n"
 		 $"HEALTH		[" @statsHealth @"] \n"
 		 $"MOBILITY		[" @statsMobility @"] \n"
@@ -206,8 +211,10 @@ simulated function SetUnitStats(XComGameState_Unit Unit)
 		 $"MISSIONS		[" @statsMissions @"] \n"
 		 $"XPSHARE		[" @statsXP @"] \n"
 		 $"KILLS		[" @statsKills @"] \n"
-		 $"PCS			[" @statsPCS @"] \n"
+		 $"PCS STATS	[" @PCSStats @"] \n"
 		 $"PCS ICON		[" @PCSImage @"] \n"
+		 $"PCS NAME		[" @PCSName @"] \n"
+		 $"PCS STATE	[" @PCSState @"] \n"
 		 $"APTITUDE		[" @intAptitude @"] \n"
 		 $"RPGOSTAT		[" @statsRPGO @"]"
 		 , default.bRustyEnableDSLLogging, 'DSLRusty_STATS');
@@ -253,7 +260,73 @@ simulated function string GetRPGOCatImage(name ItemCat)
 }
 
 	///////////////////////////////////////////////
-    //	FIND PCS IMAGE
+    //	FIND AND SET PCS DETAILS
+	///////////////////////////////////////////////
+
+simulated function SetPCSDetails(XComGameState_Unit Unit)
+{
+	local XComGameState_HeadquartersXCom XComHQ;
+	local array<XComGameState_Item> EquippedImplants;
+	local XComGameState_Item FirstPCS;
+	local int i, HPIndex, TotalBoost, BoostValue;
+	local string strBoostValue, strTotalBoost;
+	local bool bHasStatBoostBonus, bUsingBoostIncrements;
+
+	XComHQ = `XCOMHQ;
+	if (XComHQ != none)	{ bHasStatBoostBonus = XComHQ.SoldierUnlockTemplates.Find('IntegratedWarfareUnlock') != INDEX_NONE;	}
+
+	EquippedImplants = Unit.GetAllItemsInSlot(eInvSlot_CombatSim);
+	if (EquippedImplants.Length > 0)
+	{
+		FirstPCS = EquippedImplants[0];
+		strTotalBoost = "";
+		strBoostValue = "";
+
+		if (FirstPCS != none)
+		{
+			bUsingBoostIncrements = X2EquipmentTemplate(FirstPCS.GetMyTemplate()).bUseBoostIncrement;
+			HPIndex = FirstPCS.StatBoosts.Find('StatType', eStat_HP);
+
+			for (i = 0 ; i < FirstPCS.StatBoosts.length ; i++)
+			{
+				//GET VALUE OF THIS BOOST
+				BoostValue = FirstPCS.StatBoosts[i].Boost;
+
+				//INCREASE VALUE BASED ON INTEGRATED WARFARE
+				if (bHasStatBoostBonus)
+				{				
+					if (bUsingBoostIncrements) { BoostValue += class'X2SoldierIntegratedWarfareUnlockTemplate'.default.StatBoostIncrement; }
+					else { BoostValue += Round(BoostValue * class'X2SoldierIntegratedWarfareUnlockTemplate'.default.StatBoostValue); }
+				}
+
+				//increase HP if HP is the stat we're collecting and BetaStrike is ON
+				if (i == HPIndex && `SecondWaveEnabled('BetaStrike') ) 
+				{
+					BoostValue *= class'X2StrategyGameRulesetDataStructures'.default.SecondWaveBetaStrikeHealthMod;
+				}
+
+				//CONVERT TO AND MERGE STRINGS
+				TotalBoost += BoostValue;
+				strBoostValue = (BoostValue > 0 ? "+" : "") $ string(BoostValue);
+
+				if (strTotalBoost != "") { strTotalBoost $= ":"; }
+				strTotalBoost $= strBoostValue;
+			}
+
+			//SET PCS STRINGS
+			PCSStats = strTotalBoost;
+			PCSImage = class'UIUtilities_Image'.static.GetPCSImage(FirstPCS);
+			PCSName = ColorText("PCS:","27AAE1") $ Repl(FirstPCS.GetMyTemplate().GetItemFriendlyName(FirstPCS.ObjectID), "PCS:", "");
+		}
+	}
+
+	//SET PCS STATE >0 GOOD, <0 BAD, 0 NORMAL
+	if(TotalBoost != 0) { PCSState = TotalBoost > 0 ? eUIState_Good : eUIState_Bad; } else { PCSState = eUIState_Normal; }
+
+}
+
+	///////////////////////////////////////////////
+    //	FIND PCS IMAGE - DEPRECIATED
 	///////////////////////////////////////////////
 
 simulated function string GetPCSImageForUnit(XComGameState_Unit Unit)
@@ -261,16 +334,25 @@ simulated function string GetPCSImageForUnit(XComGameState_Unit Unit)
 	local array<XComGameState_Item> EquippedImplants;
 
 	EquippedImplants = Unit.GetAllItemsInSlot(eInvSlot_CombatSim);
-	if (EquippedImplants.Length > 0)
-	{
-		return class'UIUtilities_Image'.static.GetPCSImage(EquippedImplants[0]);
-	}
-
+	if (EquippedImplants.Length > 0) { return class'UIUtilities_Image'.static.GetPCSImage(EquippedImplants[0]);	}
 	return "";
 }
 
 	///////////////////////////////////////////////
-    //	FIND PCS VALUE AND COLOUR
+    //	FIND PCS NAME - DEPRECIATED
+	///////////////////////////////////////////////
+
+simulated function string GetPCSNameForUnit(XComGameState_Unit Unit)
+{
+	local array<XComGameState_Item> EquippedImplants;
+
+	EquippedImplants = Unit.GetAllItemsInSlot(eInvSlot_CombatSim);
+	if (EquippedImplants.Length > 0) { return ColorText("PCS:","53B45E") @ EquippedImplants[0].GetMyTemplate().GetItemFriendlyName(EquippedImplants[0].ObjectID); }
+	return "";
+}
+
+	///////////////////////////////////////////////
+    //	FIND PCS VALUE AND COLOUR - DEPRECIATED
 	///////////////////////////////////////////////
 
 simulated function string GetPCSString(XComGameState_Unit Unit)
@@ -278,15 +360,12 @@ simulated function string GetPCSString(XComGameState_Unit Unit)
 	local XComGameState_HeadquartersXCom XComHQ;
 	local array<XComGameState_Item> EquippedImplants;
 	local XComGameState_Item ImplantToAdd;
-	local int Index, TotalBoost, BoostValue;
-	local bool bHasStatBoostBonus;
+	local int i, Index, TotalBoost, BoostValue;
+	local bool bHasStatBoostBonus, bUsingBoostIncrements;
 
 	XComHQ = `XCOMHQ;
 
-	if (XComHQ != none)
-	{
-		bHasStatBoostBonus = XComHQ.SoldierUnlockTemplates.Find('IntegratedWarfareUnlock') != INDEX_NONE;
-	}
+	if (XComHQ != none)	{ bHasStatBoostBonus = XComHQ.SoldierUnlockTemplates.Find('IntegratedWarfareUnlock') != INDEX_NONE;	}
 
 	EquippedImplants = Unit.GetAllItemsInSlot(eInvSlot_CombatSim);
 	if (EquippedImplants.Length > 0)
@@ -296,31 +375,29 @@ simulated function string GetPCSString(XComGameState_Unit Unit)
 	
 	if(ImplantToAdd != none)
 	{
-		BoostValue = ImplantToAdd.StatBoosts[0].Boost;
-
-		if (bHasStatBoostBonus)
-		{				
-			if (X2EquipmentTemplate(ImplantToAdd.GetMyTemplate()).bUseBoostIncrement)
-            {
-				BoostValue += class'X2SoldierIntegratedWarfareUnlockTemplate'.default.StatBoostIncrement;
-            }
-			else
-            {
-				BoostValue += Round(BoostValue * class'X2SoldierIntegratedWarfareUnlockTemplate'.default.StatBoostValue);
-            }
-		}
-			
 		Index = ImplantToAdd.StatBoosts.Find('StatType', eStat_HP);
+		bUsingBoostIncrements = X2EquipmentTemplate(ImplantToAdd.GetMyTemplate()).bUseBoostIncrement;
 
-		if (Index == 0)
+		for (i = 0; i < ImplantToAdd.StatBoosts.length ; i++)
 		{
-			if (`SecondWaveEnabled('BetaStrike'))
-			{
-				BoostValue *= class'X2StrategyGameRulesetDataStructures'.default.SecondWaveBetaStrikeHealthMod;
-			}
-		}
+			BoostValue = ImplantToAdd.StatBoosts[0].Boost;
 
-		TotalBoost += BoostValue;
+			if (bHasStatBoostBonus)
+			{				
+				if (bUsingBoostIncrements) { BoostValue += class'X2SoldierIntegratedWarfareUnlockTemplate'.default.StatBoostIncrement; }
+				else { BoostValue += Round(BoostValue * class'X2SoldierIntegratedWarfareUnlockTemplate'.default.StatBoostValue); }
+			}
+			
+			if (i == Index) //only increase beta strike HP if HP is the stat we're collecting
+			{
+				if (`SecondWaveEnabled('BetaStrike'))
+				{
+					BoostValue *= class'X2StrategyGameRulesetDataStructures'.default.SecondWaveBetaStrikeHealthMod;
+				}
+			}
+
+			TotalBoost += BoostValue;
+		}
 	}
 
 	if(TotalBoost != 0)
@@ -328,6 +405,10 @@ simulated function string GetPCSString(XComGameState_Unit Unit)
 		PCSState = TotalBoost > 0 ? eUIState_Good : eUIState_Bad;
 		return (TotalBoost > 0 ? "+" : "") $ string(TotalBoost);
     }
+	else
+	{
+		PCSState = eUIState_Normal;
+	}
 
 	return "";
 }
@@ -713,21 +794,18 @@ simulated function bool ShouldShowPsi(XComGameState_Unit Unit)
     //	SHOW WEAPON ICONS
 	///////////////////////////////////////////////
 
-static function bool ShouldDisplayWeaponIcons( optional XComGameState_Unit Unit)
+static function bool ShouldDisplayWeaponIcons( XComGameState_Unit Unit, bool bRPGO)
 {
 	local XComLWTuple Tuple;
 
-    if (default.ALWAYS_SHOW_WEAPONICONS)
-    {
-		return true;
-    }
+    if (default.ALWAYS_SHOW_WEAPONICONS) { return true; }
 
 	Tuple = new class'XComLWTuple';
 	Tuple.Data.Add(2);
-	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = false;
+	Tuple.Data[0].kind = XComLWTVBool;		Tuple.Data[0].b = bRPGO; //false;
 	Tuple.Data[1].kind = XComLWTVObject;	Tuple.Data[1].o = Unit;
 
-	`XEVENTMGR.TriggerEvent('DSLShouldDisplayWeaponIcons', Tuple);
+	`XEVENTMGR.TriggerEvent('DSLShouldDisplayWeaponIcons', Tuple, Unit);
 
 	return Tuple.Data[0].b;
 }
@@ -1203,7 +1281,7 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
     //RESET/HARDCODE X POS FOR WEAPONS ICONS
 	IconXPos = 440;
 
-	if (ShouldDisplayWeaponIcons(Unit) || bRPGODetected)
+	if (ShouldDisplayWeaponIcons(Unit, bRPGODetected))
 	{
 		if(Icon_SlotP == none || Icon_SlotS == none)
 		{
@@ -1282,7 +1360,7 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 			SoldierClass = Unit.GetSoldierClassTemplate();
 			AWCRank = Unit.GetRank(); //this is a check rank
 
-			//Grab any ACTUAL AWC Perks the unit might have unlocked
+			//Grab any ADDED/ACTUAL AWC Perks the unit might have unlocked
 			for (i = 0 ; i < Unit.AWCAbilities.Length ; i++)
 			{
 				AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(Unit.AWCAbilities[i].AbilityType.AbilityName);
@@ -1309,7 +1387,7 @@ function AddNameColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 				AWCRow = Max(0, SoldierClass.AbilityTreeTitles.Length - 1);
 				AWCRank = SoldierClass.GetMaxConfiguredRank(); //this is all ranks the class has, 7/8
 
-				//Check each rank for any perks in the last row that the soldier has purchased, don't check SQD
+				//Check each rank for any perks in the last row that the soldier has purchased, don't check SQD (start at index 1)
 				for (i = 1; i <= AWCRank; i++)
 				{
 					if (Unit.AbilityTree[i].Abilities.Length > AWCRow )
@@ -1353,6 +1431,9 @@ function AddSpecColumnIcons(XComGameState_Unit Unit, UIPersonnel_SoldierListItem
 {
 	/* <>SLOT 8 */ IconXPos = 598;				if(Icon_Slot8 == none || Text_Slot8 == none) { AddStatSlot(Icon_Slot8, Text_Slot8, "8", StatIconPath[5]); } // Aim/Health	/ Kills
 	/* <>SLOT 9 */ IconXPos += IconXDelta +6;	if(Icon_Slot9 == none || Text_Slot9 == none) { AddStatSlot(Icon_Slot9, Text_Slot9, "9", StatIconPath[7]); } // Will			/ PCS
+
+	Text_Slot9_X_WILL = Text_Slot9.X; Text_Slot9_X_PCS = Text_Slot9.X -18;
+	Icon_Slot9_X_WILL = Icon_Slot9.X; Icon_Slot9_X_PCS = Icon_Slot9.X -14;
 }
 
 ///////////////////////////////////////////////
@@ -1388,36 +1469,49 @@ function HideAllStats()
 function ShowDetailed(bool IsDetailed)
 {
 	local XComGameState_Unit Unit;
-	
+
+	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
+
 	bShouldShowDetailed = IsDetailed;
 
     //HIDE EVERYTHING AND WORK OUT FROM HERE AFTERWARDS, MAKES IT LOOK LIKE THEY ARE REFRESHING/SWAPPING
 	HideAllStats();
 
 	//Show RPGO Style weapon icons if enabled
-	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
-	if (ShouldDisplayWeaponIcons(Unit) || bRPGODetected) { Icon_SlotP.Show();	Icon_SlotS.Show(); }
+	if (ShouldDisplayWeaponIcons(Unit, bRPGODetected) ) { Icon_SlotP.Show(); Icon_SlotS.Show(); }
 
     //Show what is required
 	if (IsDetailed)
 	{
-		//Rank Column
-		bRPGODetected ? Icon_SlotR.Show() : Icon_Slot1.Show(); 
-		Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? statsRPGO : statsAP, eUIState_Normal));					Text_Slot1.Show();
+		//Set Rank Column ... Aptitude or ComInt
+		bRPGODetected ? Icon_SlotR.Show() : Icon_Slot1.Show();
+		Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(bRPGODetected ? statsRPGO : statsAP, eUIState_Normal));
+		Text_Slot1.Show();
 
-		//Name Column
-		Icon_Slot2.LoadImage(StatIconPath[12]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsArmor,	eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
-		Icon_Slot3.LoadImage(StatIconPath[13]);	Text_Slot3.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsShields, 	eUIState_Normal));	Text_Slot3.Show();	Icon_Slot3.Show(); 
-		Icon_Slot4.LoadImage(StatIconPath[9]);	Text_Slot4.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsMissions, eUIState_Normal));	Text_Slot4.Show();	Icon_Slot4.Show(); 
-		Icon_Slot5.LoadImage(StatIconPath[11]);	Text_Slot5.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsXP, 		eUIState_Normal));	Icon_Slot5.Show();	Text_Slot5.Show(); 
+		//Set Name Column
+		Icon_Slot2.LoadImage(StatIconPath[12]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsArmor,	eUIState_Normal));
+		Icon_Slot3.LoadImage(StatIconPath[13]);	Text_Slot3.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsShields, 	eUIState_Normal));
+		Icon_Slot4.LoadImage(StatIconPath[9]);	Text_Slot4.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsMissions, eUIState_Normal));
+		Icon_Slot5.LoadImage(StatIconPath[11]);	Text_Slot5.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsXP, 		eUIState_Normal));
 
-		//Class Column
-		Icon_Slot8.LoadImage(StatIconPath[10]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsKills,	eUIState_Normal));	Text_Slot8.Show();	Icon_Slot8.Show(); 
+		//Set Class Column
+		Icon_Slot8.LoadImage(StatIconPath[10]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsKills,	eUIState_Normal));
 
+		//Show Above Values
+		Text_Slot2.Show();	Text_Slot3.Show();	Text_Slot4.Show();	Text_Slot5.Show();	Text_Slot8.Show();
+		Icon_Slot2.Show();	Icon_Slot3.Show();	Icon_Slot4.Show();	Icon_Slot5.Show();	Icon_Slot8.Show();
+
+		//Special Handling - PCS/Will Slot
 		if (PCSImage != "")
 		{
-			Text_Slot9.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsPCS, eUIState_Normal));	Text_Slot9.Show();
-			Icon_Slot9.LoadImage(PCSImage);			   Icon_Slot9.SetScale(IconScale * 0.5);					Icon_Slot9.Show();
+			Text_Slot9.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(PCSStats, eUIState_Normal));
+			Text_Slot9.SetPosition(Text_Slot9_X_PCS, Text_Slot9.Y);
+			Text_Slot9.Show();
+			
+			Icon_Slot9.LoadImage(PCSImage);
+			Icon_Slot9.SetScale(IconScale * 0.5);
+			Icon_Slot9.SetPosition(Icon_Slot9_X_PCS, Icon_Slot9.Y);
+			Icon_Slot9.Show();
 		}		
 
 		//Perks Panel
@@ -1425,42 +1519,47 @@ function ShowDetailed(bool IsDetailed)
 	}
 	else
 	{
-		//Rank Column
-		Icon_Slot1.Show();						Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAP, 		eUIState_Normal));	Text_Slot1.Show();		
+		//Set Rank Column
+		Text_Slot1.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAP, eUIState_Normal));	
 
-		//Name Column
+		//Set Name Column
+		Icon_Slot3.LoadImage(StatIconPath[1]);	Text_Slot3.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsMobility, eUIState_Normal));
+		Icon_Slot4.LoadImage(StatIconPath[2]);	Text_Slot4.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsDodge, 	eUIState_Normal)); 
+		Icon_Slot5.LoadImage(StatIconPath[6]);	Text_Slot5.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsDefense, 	eUIState_Normal));
+		Icon_Slot6.LoadImage(StatIconPath[3]);	Text_Slot6.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHack, 	eUIState_Normal));
+
+		//Set Name Column and Class Column ... Health/Aim Switcheroo
 		if (default.bSHOW_MAXHEALTH)
 		{
-			Icon_Slot2.LoadImage(StatIconPath[5]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAim, 		eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
-		}
-		else
-		{
-			Icon_Slot2.LoadImage(StatIconPath[0]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHealth, 	eUIState_Normal));	Text_Slot2.Show();	Icon_Slot2.Show(); 
-		}
-
-		Icon_Slot3.LoadImage(StatIconPath[1]);	Text_Slot3.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsMobility, eUIState_Normal));	Text_Slot3.Show();	Icon_Slot3.Show(); 
-		Icon_Slot4.LoadImage(StatIconPath[2]);	Text_Slot4.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsDodge, 	eUIState_Normal));	Text_Slot4.Show();	Icon_Slot4.Show(); 
-		Icon_Slot5.LoadImage(StatIconPath[6]);	Text_Slot5.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsDefense, 	eUIState_Normal));	Text_Slot5.Show();	Icon_Slot5.Show();	
-		Icon_Slot6.LoadImage(StatIconPath[3]);	Text_Slot6.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHack, 	eUIState_Normal));	Text_Slot6.Show();  Icon_Slot6.Show(); 
-
-		if (ShouldShowPsi(Unit)) //YES WE HAVE NO REASON NOT TO NOW, BUT BACKWARDS COMPATIBILTY COMPELLS US TO CHECK!
-		{
-			Icon_Slot7.LoadImage(StatIconPath[4]);	Text_Slot7.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsPsi, 	eUIState_Normal));	Text_Slot7.Show();	Icon_Slot7.Show();
-		}
-
-		//Class Column
-		if (default.bSHOW_MAXHEALTH)
-		{
-			Icon_Slot8.LoadImage(StatIconPath[0]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHealth, 	eUIState_Normal));	Text_Slot8.Show();	Icon_Slot8.Show(); 
+			Icon_Slot2.LoadImage(StatIconPath[5]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAim, eUIState_Normal)); 
+			Icon_Slot8.LoadImage(StatIconPath[0]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHealth, eUIState_Normal));
 		}
 		else 
 		{
-			Icon_Slot8.LoadImage(StatIconPath[5]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAim, 		eUIState_Normal));	Text_Slot8.Show();	Icon_Slot8.Show(); 
+			Icon_Slot2.LoadImage(StatIconPath[0]);	Text_Slot2.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsHealth, eUIState_Normal)); 
+			Icon_Slot8.LoadImage(StatIconPath[5]);	Text_Slot8.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsAim, eUIState_Normal));
 		}
 
-		Icon_Slot9.LoadImage(StatIconPath[7]);	Text_Slot9.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsWill, 	eUIState_Normal));	Text_Slot9.Show();	Icon_Slot9.Show(); 
-		
-		if (PCSImage != "")	{ Icon_Slot9.SetScale(IconScale); }	//YES WE HAVE TO RESCALE IF WE HAD A PCS IMAGE
+		//Show Above Values
+		Text_Slot1.Show();	Text_Slot2.Show();	Text_Slot3.Show();	Text_Slot4.Show();	Text_Slot5.Show();	Text_Slot6.Show();  Text_Slot8.Show();	
+		Icon_Slot1.Show();	Icon_Slot2.Show();	Icon_Slot3.Show();	Icon_Slot4.Show();	Icon_Slot5.Show();	Icon_Slot6.Show();	Icon_Slot8.Show();  
+
+		//Special Handling - Psi - YES WE HAVE NO REASON NOT TO NOW, BUT BACKWARDS COMPATIBILTY COMPELLS US TO CHECK!
+		if (ShouldShowPsi(Unit))
+		{
+			Icon_Slot7.LoadImage(StatIconPath[4]);	Text_Slot7.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsPsi, 	eUIState_Normal));
+			Text_Slot7.Show();	Icon_Slot7.Show();
+		}
+
+		//Special Handling - PCS/Will - YES WE HAVE TO RESCALE AND MOVE BACK IF WE HAD A PCS IMAGE
+		Icon_Slot9.LoadImage(StatIconPath[7]);	Text_Slot9.SetHtmlText(class'UIUtilities_Text'.static.GetColoredText(statsWill, eUIState_Normal)); 
+		if (PCSImage != "")
+		{
+			Text_Slot9.SetPosition(Text_Slot9_X_WILL, Text_Slot9.Y);
+			Icon_Slot9.SetPosition(Icon_Slot9_X_WILL, Icon_Slot9.Y);
+			Icon_Slot9.SetScale(IconScale);
+		}
+		Text_Slot9.Show();	Icon_Slot9.Show();
 
 		//Perks Panel
 		BadTraitPanel.Show();
@@ -1562,7 +1661,7 @@ simulated function UpdateItemsForFocus(bool Focussed)
 		Text_Slot5.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsXP,			( bReverse ? -1 : isUIState )));	//black to cyan
 
 		Text_Slot8.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsKills,		( bReverse ? -1 : isUIState )));	//black to cyan
-		Text_Slot9.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(statsPCS,			( bReverse ? -1 : PCSColour )));	//black to good/bad
+		Text_Slot9.SetHtmlText( class'UIUtilities_Text'.static.GetColoredText(PCSStats,			( bReverse ? -1 : PCSColour )));	//black to good/bad
 
 		/* set AWC perks */	foreach BonusAbilityIcons(PerkIcon)	{ PerkIcon.SetForegroundColor( bReverse ? "000000" : "9ACBCB");}	//black to cyan
 	}
@@ -1676,8 +1775,13 @@ protected function CreateAttentionIcon()
 }
 
 ////////////////////////////////////////
-//  REFRESH TOOLTIPS
+//  TEXT/TOOLTIPS FUNCTIONS
 ////////////////////////////////////////
+
+static function string ColorText( string strValue, string HexColor )
+{
+	return "<font color='#"$HexColor$"'>"$strValue$"</font>";
+}
 
 //refresh and update tooltips on hover over abilities and traits
 simulated function RefreshTooltipText()
@@ -1708,7 +1812,7 @@ simulated function RefreshTooltipText()
 		//add linebreak if we had disabled details
 		if (textTooltip != "") { textTooltip $= "\n\n"; }
 
-		textTooltip $= Repl(BondmateTooltip, "%SOLDIERNAME", ColorText(Caps(Bondmate.GetName(eNameType_FullNick)), "3CEDD4") );
+		textTooltip $= ColorText(Caps(Repl(BondmateTooltip, "%SOLDIERNAME", ColorText(Bondmate.GetName(eNameType_FullNick), "9ACBCB") ) ), "3CEDD4" );
 	}
 	else if( Unit.ShowBondAvailableIcon(BondmateRef, BondData) )
 	{
@@ -1723,6 +1827,9 @@ simulated function RefreshTooltipText()
 	{
 		//add linebreak if we had previous details
 		if (textTooltip != "") { textTooltip $= "\n\n"; }
+
+		//add pcs name if has one
+		if (PCSName != "") { textTooltip $= PCSName $"\n\n"; }
 
 		//add perk names if any (we gathered these earlier)
 		foreach AWCTemplates(AbilityTemplate)
@@ -1758,19 +1865,51 @@ simulated function RefreshTooltipText()
 	//if it's not blank set it
 	if (textTooltip != "")
 	{
-		SetTooltipText(textTooltip);
-		BondIcon.SetTooltipText(textTooltip); //expand the bondmate icon tooltip text too as selecting/hovering over the area is hard!
+		SetTooltipText_Improved(textTooltip,"", 650, /* Height-Auto */, /* Loc-false */, 4); //ANCHOR_MIDDLE_LEFT
 		Movie.Pres.m_kTooltipMgr.TextTooltip.SetUsePartialPath(CachedTooltipID, true);
+
+		//expand the bondmate icon tooltip text too as selecting/hovering over the area is hard!
+		//set Bond Icon to use the same tooltip!
+		BondIcon.SetTooltip(Movie.Pres.m_kTooltipMgr.GetTooltipByID(CachedTooltipID));
 	}
 	else
 	{
-		SetTooltipText("");
+		SetTooltipText_Improved("");
 	}
 }
 
-static function string ColorText( string strValue, string HexColor )
+//overwrite of this function traced back through UIPersonnel_SoldierListItem > UIPersonnel_ListItem > UIButton > UIPanel
+//doing this so we can ALSO input width/height, behaviour, color, displaytime and delay
+simulated function SetTooltipText_Improved(string strText, 
+                                    optional string Title			= "",
+                                    optional float MaxW				= class'UITextTooltip'.default.maxW,				/* 300 */
+                                    optional float MaxH				= class'UITextTooltip'.default.maxH, 				/* 300 */
+                                    optional bool bRelativeLocation	= class'UITextTooltip'.default.bRelativeLocation,	/* false */
+                                    optional int TooltipAnchor      = class'UITextTooltip'.default.Anchor, 				/* 1 top left */
+                                    optional float OffsetX			= 0.0,
+                                    optional float OffsetY			= 0.0,
+                                    optional bool bFollowMouse      = class'UITextTooltip'.default.bFollowMouse,		/* true */
+                                    optional float Delay            = class'UITextTooltip'.default.tDelay,				/* 0.75 */
+                                    optional int Hover 				= class'UITextTooltip'.default.eTTBehavior,			/* 0 eUITT_Behavior_Hover */
+                                    optional int Colour				= class'UITextTooltip'.default.eTTColor,			/* 0 eUITT_Style_Cyan */
+                                    optional float DisplayTime		= class'UITextTooltip'.default.tDisplayTime,		/* -1.0  */
+                                    optional float AnimateIn		= class'UITextTooltip'.default.tAnimateIn,			/* 0.2 */
+                                    optional float AnimateOut		= class'UITextTooltip'.default.tAnimateOut			/* 0.2 */
+                                )
 {
-	return "<font color='#"$HexColor$"'>"$strValue$"</font>";
+    //REMOVE ANY PREVIOUS TOOLTIPS FROM THE CHILD
+    if (bHasTooltip) { RemoveTooltip(); }
+
+    //SET NEW TEXT
+    if (strText != "")
+    {
+		//THIS CREATES AND ASSIGNS THE NEW TOOLTIP TO THE CHILD
+		CachedTooltipId = Movie.Pres.m_kTooltipMgr.AddNewTooltipTextBox(strText, OffsetX, OffsetY, string(MCPath), 
+			Title, bRelativeLocation, TooltipAnchor, bFollowMouse, MaxW, MaxH, Hover, Colour, DisplayTime, Delay, AnimateIn, AnimateOut);
+
+		SetTooltip(Movie.Pres.m_kTooltipMgr.GetTooltipByID(CachedTooltipID));
+		bHasTooltip = true;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////
