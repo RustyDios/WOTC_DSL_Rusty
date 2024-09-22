@@ -848,7 +848,7 @@ simulated protected function bool TriggerShouldDisplayMentalStatus (XComGameStat
 simulated function UpdateData()
 {
 	local XComGameState_Unit Unit;
-	local string flagIcon, rankIcon, rankShort, classIcon, classname, mentalStatus, status, statusTimeLabel, statusTimeValue, UnitLoc;
+	local string flagIcon, rankIcon, rankShort, classIcon, classname, mentalStatus, status, statusTime, statusTimeLabel, statusTimeValue, UnitLoc;
 	local int iRank, iTimeNum, BondLevel;
 	
 	//local X2SoldierClassTemplate SoldierClass;
@@ -878,6 +878,7 @@ simulated function UpdateData()
 	Tuple.Data[6].kind = XComLWTVObject;	Tuple.Data[6].o = none;		//XComGameState_WorldRegion object for the region the unit is located in
 	Tuple.Data[7].kind = XComLWTVBool;		Tuple.Data[7].b = false;	//Is the unit Locked in their Haven
 	Tuple.Data[8].kind = XComLWTVBool;		Tuple.Data[8].b = false;	//Is this unit on a mission right now
+	//Tuple.Data[9].kind = XComLWTVBool;	Tuple.Data[9].b = false;	//Is this unit a Psi-OP ready to train
 
 	`XEVENTMGR.TriggerEvent('GetLWUnitInfo', Tuple, Unit, none);
 	//==================================================
@@ -960,6 +961,8 @@ simulated function UpdateData()
 
 	flagIcon = Unit.GetCountryTemplate().FlagImage;
 
+	statusTime = statusTimeValue $ "\n" $ Class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(Class'UIUtilities_Text'.static.GetSizedText( statusTimeLabel, 12));
+
 	AS_UpdateDataSoldier(
 		Caps(Unit.GetName(eNameType_Full)),
 		Caps(Unit.GetName(eNameType_Nick)),
@@ -968,12 +971,12 @@ simulated function UpdateData()
 		Caps(classname),
 		classIcon,
 		status,
-		statusTimeValue $"\n" $ Class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(Class'UIUtilities_Text'.static.GetSizedText( statusTimeLabel, 12)),
+		statusTime,
 		UnitLoc,
 		flagIcon,
-		false, // is disabled - LEFTOVER COMMENT from base game file, this mod handles disabled - RustyDios
+		false, /* is disabled - LEFTOVER COMMENT from base game file, this mod handles disabled - RustyDios */
 		Unit.ShowPromoteIcon(),
-		false, // psi soldiers cant rank up via missions - LEFTOVER COMMENT from base game file - RustyDios
+		false, /* psi soldiers cant rank up via missions - LEFTOVER COMMENT from base game file - RustyDios */
 		mentalStatus,
 		BondLevel
 	);
