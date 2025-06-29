@@ -1,7 +1,7 @@
 //*******************************************************************************************
 //  FILE:  Detailed Soldier List Item BY BOUNTYGIVER && RUSTYDIOS
 //  
-//	File CREATED 08/12/20	02:00	LAST UPDATED 05/08/24	04:00
+//	File CREATED 08/12/20	02:00	LAST UPDATED 29/06/25	15:45
 //
 //  Uses CHL issues #322 #1134 and expands on -bg-'s original DSL
 //
@@ -1714,46 +1714,67 @@ simulated function UpdateItemsForFocus(bool Focussed)
 //makes bond icon have a flashy outline for partner
 simulated function FocusBondmateEntry(bool IsFocus)
 {
-	local XComGameState_Unit Unit;
+	local XComGameState_Unit Unit, UnitO;
 	local UIPersonnel_SoldierListItemDetailed OtherListItem;
 	local array<UIPanel> AllOtherListItem;
 	local UIPanel OtherItem;
-	local StateObjectReference BondmateRef;
+	local StateObjectReference BondmateRef, BondmateRefO;
 	local SoldierBond BondData;
 	
+	local bool bBondsInSquadWithoutMe;
+
+	//reset
+	NeedsAttention(false);
+	BondIcon.OnLoseFocus();
+
+	//get our items unit
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
 
+	//if our unit has a bond
 	if( Unit.HasSoldierBond(BondmateRef, BondData) )
 	{
-		ParentPanel.GetChildrenOfType(class'UIPersonnel_SoldierListItemDetailed', AllOtherListItem);
-		foreach AllOtherListitem(OtherItem)
+		//check if our units bondmate is part of the xcom squad line up
+		bBondsInSquadWithoutMe = default.bShowAttentionBondmateInSquad && `XCOMHQ.IsUnitInSquad(BondmateRef) && !`XCOMHQ.IsUnitInSquad(UnitRef);
+
+		//show attention/focus for hovering partners
+		if (default.bShowAttentionBondmateHovered)
 		{
-			OtherListItem = UIPersonnel_SoldierListItemDetailed(OtherItem);
-			if (OtherListItem != none && OtherListItem.UnitRef.ObjectID == BondmateRef.ObjectID)
+			ParentPanel.GetChildrenOfType(class'UIPersonnel_SoldierListItemDetailed', AllOtherListItem);
+			foreach AllOtherListitem(OtherItem)
 			{
-				if (IsFocus)
+				OtherListItem = UIPersonnel_SoldierListItemDetailed(OtherItem);
+				if (OtherListItem != none)
 				{
-					OtherListItem.NeedsAttention(default.bShowAttentionBondmateHovered);
-					OtherListItem.BondIcon.OnReceiveFocus();
-				}
-				else
-				{
-					OtherListItem.NeedsAttention(false);
-					OtherListItem.BondIcon.OnLoseFocus();
+					if (IsFocus && ( OtherListItem.UnitRef.ObjectID == BondmateRef.ObjectID || OtherListItem.UnitRef.ObjectID == UnitRef.ObjectID) ) 
+					{
+						//for our currently hovered bondmates
+						OtherListItem.NeedsAttention(true);
+						OtherListItem.BondIcon.OnReceiveFocus();
+					}
+					else if (bBondsInSquadWithoutMe && OtherListItem.UnitRef.ObjectID == UnitRef.ObjectID)
+					{
+						//OtherListItem.NeedsAttention(true);
+						OtherListItem.BondIcon.OnReceiveFocus();
+					}
+					else
+					{
+						//for everyone else or not focused
+						OtherListItem.NeedsAttention(false);
+						OtherListItem.BondIcon.OnLoseFocus();
+
+						//check if the other items units bondmate is part of squad hq line up!
+						UnitO = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(OtherListItem.UnitRef.ObjectID));
+						if( UnitO.HasSoldierBond(BondmateRefO, BondData) )
+						{
+							if (default.bShowAttentionBondmateInSquad && `XCOMHQ.IsUnitInSquad(BondmateRefO) && !`XCOMHQ.IsUnitInSquad(OtherListItem.UnitRef))
+							{
+								//OtherListItem.NeedsAttention(true);
+								OtherListItem.BondIcon.OnReceiveFocus();
+							}
+						}
+					}
 				}
 			}
-		}
-
-		//highlight my icon if my bondmate is in the squad and I am not
-		if (`XCOMHQ.IsUnitInSquad(BondmateRef) && !`XCOMHQ.IsUnitInSquad(UnitRef))
-		{
-			NeedsAttention(default.bShowAttentionBondmateInSquad);
-			BondIcon.OnReceiveFocus();
-		}
-		else
-		{
-			NeedsAttention(false);
-			BondIcon.OnLoseFocus();
 		}
 	}
 }
